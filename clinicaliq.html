@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClinicalIQ — Clinical Intelligence Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: { sans: ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'Segoe UI', 'Roboto', 'sans-serif'] },
+      colors: { accent: '#007AFF', destructive: '#FF3B30', dark: '#1C1C1E' }
+    }
+  }
+}
+</script>
+<style>
+  .tab-btn.active { color: #007AFF; border-bottom: 2px solid #007AFF; background: white; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  .skeleton { background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  .suggest-item:hover, .suggest-item.selected { background: #f3f4f6; }
+  .fade-in { animation: fadeIn 0.2s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body class="bg-white text-dark font-sans antialiased">
+
+<!-- ====== LANDING PAGE ====== -->
+<div id="landing" class="min-h-screen flex flex-col items-center justify-center px-4">
+  <div class="flex flex-col items-center gap-8 w-full max-w-3xl">
+    <div class="text-center">
+      <h1 class="text-4xl font-bold tracking-tight mb-2">Clinical<span class="text-accent">IQ</span></h1>
+      <p class="text-base text-gray-500 max-w-md mx-auto">Evidence-grounded clinical intelligence. Search any drug, disease, or ICD-10 code.</p>
+    </div>
+    <div class="w-full relative" id="search-container">
+      <input id="search-input" type="text" autofocus
+        class="w-full h-14 px-5 text-lg rounded-2xl border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all"
+        placeholder="Search drug, disease, or ICD-10 code...">
+      <div id="suggestions" class="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl border border-gray-200 shadow-lg z-50 hidden overflow-hidden"></div>
+    </div>
+    <div class="flex flex-wrap items-center justify-center gap-2">
+      <span class="text-xs text-gray-400">Try:</span>
+      <button onclick="doSearch('vancomycin')" class="px-3 py-1.5 text-xs font-medium rounded-full bg-gray-100 hover:bg-accent/10 hover:text-accent transition-colors">vancomycin</button>
+      <button onclick="doSearch('sepsis')" class="px-3 py-1.5 text-xs font-medium rounded-full bg-gray-100 hover:bg-accent/10 hover:text-accent transition-colors">sepsis</button>
+      <button onclick="doSearch('semaglutide')" class="px-3 py-1.5 text-xs font-medium rounded-full bg-gray-100 hover:bg-accent/10 hover:text-accent transition-colors">semaglutide</button>
+      <button onclick="doSearch('E11.65')" class="px-3 py-1.5 text-xs font-medium rounded-full bg-gray-100 hover:bg-accent/10 hover:text-accent transition-colors">E11.65</button>
+      <button onclick="doSearch('MRSA')" class="px-3 py-1.5 text-xs font-medium rounded-full bg-gray-100 hover:bg-accent/10 hover:text-accent transition-colors">MRSA</button>
+    </div>
+    <p class="text-[11px] text-gray-400 text-center max-w-lg mt-8">ClinicalIQ retrieves data from FDA, PubMed, ClinicalTrials.gov, and MedlinePlus. All content must be verified against current prescribing information before clinical application.</p>
+  </div>
+</div>
+
+<!-- ====== RESULTS PAGE ====== -->
+<div id="results-page" class="min-h-screen bg-gray-50/50 hidden">
+  <header class="sticky top-0 z-40 bg-white border-b border-gray-200/50 shadow-sm">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center gap-4">
+      <a onclick="showLanding()" class="text-xl font-bold tracking-tight cursor-pointer shrink-0">Clinical<span class="text-accent">IQ</span></a>
+      <div class="flex-1 relative">
+        <input id="search-input-compact" type="text"
+          class="w-full h-10 px-4 text-sm rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all"
+          placeholder="Search...">
+        <div id="suggestions-compact" class="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl border border-gray-200 shadow-lg z-50 hidden overflow-hidden"></div>
+      </div>
+    </div>
+  </header>
+  <div class="max-w-5xl mx-auto px-4 py-6">
+    <div id="loading-skeleton" class="hidden">
+      <div class="bg-white rounded-xl border border-gray-200/50 p-6 space-y-4">
+        <div class="flex gap-2 mb-6"><div class="skeleton h-9 w-24 rounded-lg"></div><div class="skeleton h-9 w-24 rounded-lg"></div><div class="skeleton h-9 w-20 rounded-lg"></div></div>
+        <div class="skeleton h-5 w-48 rounded"></div>
+        <div class="skeleton h-4 w-full rounded"></div>
+        <div class="skeleton h-4 w-full rounded"></div>
+        <div class="skeleton h-4 w-3/4 rounded"></div>
+        <div class="skeleton h-4 w-full rounded"></div>
+        <div class="skeleton h-4 w-5/6 rounded"></div>
+      </div>
+    </div>
+    <div id="error-display" class="hidden text-center py-12">
+      <p class="text-destructive font-medium mb-2">Search Error</p>
+      <p id="error-msg" class="text-sm text-gray-500"></p>
+      <button onclick="retrySearch()" class="mt-4 px-4 py-2 text-sm font-medium text-accent hover:bg-accent/5 rounded-lg transition-colors">Retry</button>
+    </div>
+    <div id="clinical-card" class="hidden fade-in"></div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════════════════
+// QUERY CLASSIFIER
+// ════════════════════════════════════════════════════════════════════════════
+const ICD10_RE = /^[A-Z]\d{2}(\.\d{1,4})?$/;
+const DRUG_CLASS_KW = ['inhibitor','blocker','agonist','antagonist','statin','ssri','snri','nsaid','ace inhibitor','arb','beta blocker','calcium channel','antibiotic','antifungal','antiviral','anticoagulant','antiplatelet','diuretic','benzodiazepine','opioid','steroid','corticosteroid','immunosuppressant','biologic','monoclonal'];
+const DISEASE_KW = ['syndrome','disease','disorder','infection','cancer','carcinoma','failure','insufficiency','sepsis','pneumonia','diabetes','hypertension','asthma','copd','hepatitis','cirrhosis','pancreatitis','meningitis','encephalitis','endocarditis','osteomyelitis','cellulitis','abscess','mrsa','vre','clostridium','clostridioides'];
+
+function classify(q) {
+  const t = q.trim();
+  if (ICD10_RE.test(t.toUpperCase())) return 'icd10_code';
+  const lower = t.toLowerCase();
+  if (DRUG_CLASS_KW.some(k => lower.includes(k))) return 'drug_class';
+  if (DISEASE_KW.some(k => lower.includes(k))) return 'disease_state';
+  return 'drug_lookup';
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// AUTOCOMPLETE
+// ════════════════════════════════════════════════════════════════════════════
+let debounceTimer = null;
+let selectedIdx = -1;
+let currentSuggestions = [];
+
+function setupAutocomplete(inputEl, suggestEl) {
+  inputEl.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    const q = inputEl.value.trim();
+    if (q.length < 2) { suggestEl.classList.add('hidden'); return; }
+    debounceTimer = setTimeout(() => fetchSuggestions(q, suggestEl), 300);
+  });
+  inputEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); suggestEl.classList.add('hidden'); doSearch(inputEl.value); }
+    if (e.key === 'Escape') suggestEl.classList.add('hidden');
+    if (e.key === 'ArrowDown') { e.preventDefault(); selectedIdx = Math.min(selectedIdx + 1, currentSuggestions.length - 1); highlightSuggestion(suggestEl); }
+    if (e.key === 'ArrowUp') { e.preventDefault(); selectedIdx = Math.max(selectedIdx - 1, 0); highlightSuggestion(suggestEl); }
+    if (e.key === 'Enter' && selectedIdx >= 0 && currentSuggestions[selectedIdx]) { e.preventDefault(); doSearch(currentSuggestions[selectedIdx]); suggestEl.classList.add('hidden'); }
+  });
+  inputEl.addEventListener('blur', () => setTimeout(() => suggestEl.classList.add('hidden'), 200));
+}
+
+async function fetchSuggestions(q, container) {
+  currentSuggestions = []; selectedIdx = -1;
+  try {
+    // OpenFDA drug suggestions
+    const fdaRes = await fetch(`https://api.fda.gov/drug/label.json?search=openfda.brand_name:${encodeURIComponent(q)}*&limit=5`);
+    if (fdaRes.ok) {
+      const data = await fdaRes.json();
+      (data.results || []).forEach(r => {
+        const names = r.openfda?.brand_name || r.openfda?.generic_name || [];
+        names.forEach(n => { if (!currentSuggestions.includes(n) && currentSuggestions.length < 7) currentSuggestions.push(n); });
+      });
+    }
+  } catch {}
+  if (currentSuggestions.length === 0) { container.classList.add('hidden'); return; }
+  container.innerHTML = currentSuggestions.map((s, i) =>
+    `<div class="suggest-item px-4 py-2.5 text-sm cursor-pointer" onclick="doSearch('${s.replace(/'/g, "\\'")}')">${s}</div>`
+  ).join('');
+  container.classList.remove('hidden');
+}
+
+function highlightSuggestion(container) {
+  container.querySelectorAll('.suggest-item').forEach((el, i) => {
+    el.classList.toggle('selected', i === selectedIdx);
+  });
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════════════════════════════════════
+let lastQuery = '';
+
+function showLanding() {
+  document.getElementById('landing').classList.remove('hidden');
+  document.getElementById('results-page').classList.add('hidden');
+  document.getElementById('search-input').value = '';
+  document.getElementById('search-input').focus();
+}
+
+function showResults() {
+  document.getElementById('landing').classList.add('hidden');
+  document.getElementById('results-page').classList.remove('hidden');
+}
+
+function doSearch(q) {
+  q = q.trim();
+  if (!q || q.length < 2) return;
+  lastQuery = q;
+  document.getElementById('search-input').value = q;
+  document.getElementById('search-input-compact').value = q;
+  document.getElementById('suggestions').classList.add('hidden');
+  document.getElementById('suggestions-compact').classList.add('hidden');
+  showResults();
+  executeSearch(q);
+}
+
+function retrySearch() { if (lastQuery) doSearch(lastQuery); }
+
+document.getElementById('search-input').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(e.target.value); });
+document.getElementById('search-input-compact').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(e.target.value); });
+setupAutocomplete(document.getElementById('search-input'), document.getElementById('suggestions'));
+setupAutocomplete(document.getElementById('search-input-compact'), document.getElementById('suggestions-compact'));
+
+// ════════════════════════════════════════════════════════════════════════════
+// DATA FETCHERS
+// ════════════════════════════════════════════════════════════════════════════
+async function fetchFDALabel(query) {
+  const search = `openfda.generic_name:"${query}"+openfda.brand_name:"${query}"`;
+  const res = await fetch(`https://api.fda.gov/drug/label.json?search=${encodeURIComponent(search)}&limit=1`);
+  if (!res.ok) return null;
+  const data = await res.json();
+  const r = data.results?.[0];
+  if (!r) return null;
+  return {
+    brand_name: r.openfda?.brand_name || [],
+    generic_name: r.openfda?.generic_name || [],
+    manufacturer: r.openfda?.manufacturer_name?.[0] || 'Unknown',
+    indications: r.indications_and_usage?.[0] || null,
+    dosage: r.dosage_and_administration?.[0] || null,
+    boxed_warning: r.boxed_warning?.[0] || null,
+    contraindications: r.contraindications?.[0] || null,
+    warnings: r.warnings_and_precautions?.[0] || r.warnings?.[0] || null,
+    interactions: r.drug_interactions?.[0] || null,
+    pregnancy: r.pregnancy?.[0] || null,
+    nursing: r.nursing_mothers?.[0] || null,
+    set_id: r.set_id || r.id || '',
+  };
+}
+
+async function fetchFAERS(query) {
+  const search = `patient.drug.openfda.generic_name.exact:"${query.toUpperCase()}"`;
+  const res = await fetch(`https://api.fda.gov/drug/event.json?search=${encodeURIComponent(search)}&count=patient.reaction.reactionmeddrapt.exact&limit=15`);
+  if (!res.ok) {
+    // Fallback: fuzzy match
+    const res2 = await fetch(`https://api.fda.gov/drug/event.json?search=patient.drug.medicinalproduct:"${encodeURIComponent(query)}"&count=patient.reaction.reactionmeddrapt.exact&limit=15`);
+    if (!res2.ok) return null;
+    const data2 = await res2.json();
+    return { reactions: data2.results || [], match: 'fuzzy', drug: query };
+  }
+  const data = await res.json();
+  return { reactions: data.results || [], match: 'exact', drug: query };
+}
+
+async function fetchRecalls(query) {
+  const res = await fetch(`https://api.fda.gov/drug/enforcement.json?search=openfda.generic_name:"${encodeURIComponent(query)}"+openfda.brand_name:"${encodeURIComponent(query)}"&limit=10`);
+  if (!res.ok) return [];
+  const data = await res.json();
+  // Filter: only Ongoing Class I and II
+  return (data.results || []).filter(r =>
+    r.status === 'Ongoing' && (r.classification === 'Class I' || r.classification === 'Class II')
+  );
+}
+
+async function fetchTrials(query, queryType) {
+  const param = (queryType === 'drug_lookup' || queryType === 'drug_class') ? 'query.intr' : 'query.cond';
+  const url = `https://clinicaltrials.gov/api/v2/studies?${param}=${encodeURIComponent(query)}&filter.overallStatus=RECRUITING,ACTIVE_NOT_RECRUITING,COMPLETED&pageSize=10&fields=NCTId,BriefTitle,OverallStatus,Phase,EnrollmentInfo,PrimaryCompletionDate,LeadSponsorName,InterventionName,PrimaryOutcomeMeasure&format=json`;
+  const res = await fetch(url);
+  if (!res.ok) return [];
+  const data = await res.json();
+  return (data.studies || []).map(s => {
+    const p = s.protocolSection || {};
+    const id = p.identificationModule || {};
+    const status = p.statusModule || {};
+    const design = p.designModule || {};
+    const sponsor = p.sponsorCollaboratorsModule || {};
+    const arms = p.armsInterventionsModule || {};
+    const outcomes = p.outcomesModule || {};
+    return {
+      nctId: id.nctId || '',
+      title: id.briefTitle || '',
+      status: status.overallStatus || '',
+      phase: (design.phases || ['N/A'])[0] || 'N/A',
+      enrollment: status.enrollmentInfo?.count || design.enrollmentInfo?.count || null,
+      completionDate: status.primaryCompletionDateStruct?.date || null,
+      sponsor: sponsor.leadSponsor?.name || '',
+      interventions: (arms.interventions || []).map(i => i.name).filter(Boolean),
+      primaryOutcome: outcomes.primaryOutcomes?.[0]?.measure || '',
+    };
+  });
+}
+
+async function fetchPubMed(query, queryType) {
+  let meshQuery;
+  if (queryType === 'disease_state' || queryType === 'icd10_code') {
+    meshQuery = `${query}[MeSH Major Topic] AND (Guideline[pt] OR Practice Guideline[pt] OR Clinical Trial[pt])`;
+  } else {
+    meshQuery = `${query}[MeSH Terms] AND (Clinical Trial[pt] OR Meta-Analysis[pt] OR Systematic Review[pt])`;
+  }
+  const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${encodeURIComponent(meshQuery)}&retmax=10&datetype=pdat&reldate=1825&retmode=json`;
+  const searchRes = await fetch(searchUrl);
+  if (!searchRes.ok) return [];
+  const searchData = await searchRes.json();
+  const ids = searchData.esearchresult?.idlist || [];
+  if (ids.length === 0) return [];
+
+  const fetchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=${ids.join(',')}&rettype=xml&retmode=xml`;
+  const fetchRes = await fetch(fetchUrl);
+  if (!fetchRes.ok) return [];
+  const xml = await fetchRes.text();
+  return parseArticles(xml);
+}
+
+function parseArticles(xml) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xml, 'text/xml');
+  const articles = doc.querySelectorAll('PubmedArticle');
+  return Array.from(articles).map(a => {
+    const pmid = a.querySelector('PMID')?.textContent || '';
+    const title = a.querySelector('ArticleTitle')?.textContent || '';
+    const journal = a.querySelector('Journal Title')?.textContent || a.querySelector('ISOAbbreviation')?.textContent || '';
+    const year = a.querySelector('PubDate Year')?.textContent || a.querySelector('MedlineDate')?.textContent?.slice(0, 4) || '';
+    const abstract = a.querySelector('AbstractText')?.textContent || '';
+    const authors = Array.from(a.querySelectorAll('Author')).map(au => {
+      const ln = au.querySelector('LastName')?.textContent || '';
+      const fn = au.querySelector('ForeName')?.textContent || '';
+      return fn ? `${ln} ${fn[0]}` : ln;
+    });
+    const pubTypes = Array.from(a.querySelectorAll('PublicationType')).map(pt => pt.textContent || '');
+    const doi = Array.from(a.querySelectorAll('ArticleId')).find(ai => ai.getAttribute('IdType') === 'doi')?.textContent || '';
+    let tier = 5;
+    const ptStr = pubTypes.join(' ').toLowerCase();
+    if (ptStr.includes('meta-analysis') || ptStr.includes('systematic review')) tier = 1;
+    else if (ptStr.includes('randomized controlled')) tier = 2;
+    else if (ptStr.includes('observational') || ptStr.includes('cohort')) tier = 3;
+    else if (ptStr.includes('case report')) tier = 4;
+    return { pmid, title, journal, year, abstract, authors, pubTypes, doi, tier };
+  });
+}
+
+async function fetchMedlinePlus(query) {
+  // Try resolving RxCUI first
+  let rxcui = null;
+  try {
+    const rxRes = await fetch(`https://rxnav.nlm.nih.gov/REST/rxcui.json?name=${encodeURIComponent(query)}&search=1`);
+    if (rxRes.ok) {
+      const rxData = await rxRes.json();
+      rxcui = rxData.idGroup?.rxnormId?.[0] || null;
+    }
+  } catch {}
+
+  if (!rxcui) return null;
+
+  try {
+    const mlRes = await fetch(`https://connect.medlineplus.gov/application?mainSearchCriteria.v.cs=2.16.840.1.113883.6.88&mainSearchCriteria.v.c=${rxcui}&knowledgeResponseType=application/json`);
+    if (!mlRes.ok) return null;
+    const mlData = await mlRes.json();
+    const entries = mlData.feed?.entry || [];
+    if (entries.length === 0) return null;
+    const summary = entries[0]?.summary?._value || '';
+    const links = entries.slice(0, 5).map(e => ({ label: e.title?._value || '', url: e.link?.[0]?.href || '' })).filter(l => l.url);
+    return { rxcui, summary: summary.replace(/<[^>]+>/g, ''), links };
+  } catch { return null; }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// SEARCH ORCHESTRATOR
+// ════════════════════════════════════════════════════════════════════════════
+async function executeSearch(query) {
+  const card = document.getElementById('clinical-card');
+  const skeleton = document.getElementById('loading-skeleton');
+  const errorEl = document.getElementById('error-display');
+  card.classList.add('hidden'); errorEl.classList.add('hidden'); skeleton.classList.remove('hidden');
+
+  const qType = classify(query);
+  const isDrug = qType === 'drug_lookup' || qType === 'drug_class';
+  const ts = new Date().toISOString();
+
+  try {
+    const promises = [
+      isDrug ? fetchFDALabel(query) : Promise.resolve(null),
+      isDrug ? fetchFAERS(query) : Promise.resolve(null),
+      isDrug ? fetchRecalls(query) : Promise.resolve([]),
+      fetchTrials(query, qType),
+      fetchPubMed(query, qType),
+      isDrug ? fetchMedlinePlus(query) : Promise.resolve(null),
+    ];
+
+    const [fdaLabel, faers, recalls, trials, literature, medlineplus] = await Promise.allSettled(promises).then(results =>
+      results.map(r => r.status === 'fulfilled' ? r.value : null)
+    );
+
+    skeleton.classList.add('hidden');
+    renderClinicalCard(card, { query, qType, ts, fdaLabel, faers, recalls: recalls || [], trials: trials || [], literature: literature || [], medlineplus });
+    card.classList.remove('hidden');
+  } catch (err) {
+    skeleton.classList.add('hidden');
+    document.getElementById('error-msg').textContent = err.message || 'An unexpected error occurred.';
+    errorEl.classList.remove('hidden');
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// RENDER CLINICAL CARD
+// ════════════════════════════════════════════════════════════════════════════
+function renderClinicalCard(container, data) {
+  const { query, qType, ts, fdaLabel, faers, recalls, trials, literature, medlineplus } = data;
+
+  const tabs = [];
+  if (fdaLabel) tabs.push({ id: 'fda', label: 'FDA Label', render: () => renderFDATab(fdaLabel, ts) });
+  if (faers && faers.reactions?.length > 0) tabs.push({ id: 'faers', label: 'Adverse Events', render: () => renderFAERSTab(faers, ts) });
+  if (recalls.length > 0) tabs.push({ id: 'recalls', label: `Recalls`, badge: recalls.length, render: () => renderRecallsTab(recalls, ts) });
+  if (trials.length > 0) tabs.push({ id: 'trials', label: 'Trials', render: () => renderTrialsTab(trials) });
+  if (literature.length > 0) tabs.push({ id: 'lit', label: 'Literature', render: () => renderLiteratureTab(literature) });
+  if (medlineplus) tabs.push({ id: 'mlp', label: 'Drug Summary', render: () => renderMedlinePlusTab(medlineplus) });
+
+  if (tabs.length === 0) {
+    container.innerHTML = `<div class="bg-white rounded-xl border border-gray-200/50 p-12 text-center shadow-sm">
+      <p class="text-gray-500">No results found for &ldquo;${esc(query)}&rdquo;</p>
+    </div>`;
+    return;
+  }
+
+  const tabBar = tabs.map((t, i) =>
+    `<button class="tab-btn px-4 py-2.5 text-sm font-medium text-gray-500 border-b-2 border-transparent rounded-t-lg transition-colors ${i === 0 ? 'active' : ''}" data-tab="${t.id}">
+      ${esc(t.label)}${t.badge ? `<span class="ml-1.5 text-[10px] font-bold bg-destructive text-white rounded-full w-5 h-5 inline-flex items-center justify-center">${t.badge}</span>` : ''}
+    </button>`
+  ).join('');
+
+  const tabPanels = tabs.map((t, i) =>
+    `<div class="tab-content ${i === 0 ? 'active' : ''}" id="panel-${t.id}">${t.render()}</div>`
+  ).join('');
+
+  container.innerHTML = `
+    <div class="bg-white rounded-xl border border-gray-200/50 shadow-sm overflow-hidden fade-in">
+      <div class="border-b border-gray-200 bg-gray-50/50 px-2 pt-2">
+        <div class="flex gap-0">${tabBar}</div>
+      </div>
+      <div class="p-6">
+        <div class="flex items-center gap-3 mb-4 text-xs text-gray-500">
+          <span>Query: <span class="font-medium text-dark">${esc(query)}</span></span>
+          <span>&middot;</span>
+          <span class="capitalize">${qType.replace('_', ' ')}</span>
+          <span>&middot;</span>
+          <span>${new Date(ts).toLocaleTimeString()}</span>
+        </div>
+        ${tabPanels}
+      </div>
+    </div>`;
+
+  // Tab switching
+  container.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      container.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      container.querySelectorAll('.tab-content').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(`panel-${btn.dataset.tab}`).classList.add('active');
+    });
+  });
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// TAB RENDERERS
+// ════════════════════════════════════════════════════════════════════════════
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+function truncate(text, max) {
+  if (!text || text.length <= max) return esc(text || '');
+  const id = 'exp_' + Math.random().toString(36).slice(2, 8);
+  return `<span id="${id}_short">${esc(text.slice(0, max))}... <button onclick="document.getElementById('${id}_short').style.display='none';document.getElementById('${id}_full').style.display='inline'" class="text-accent text-xs font-medium hover:underline">Expand</button></span><span id="${id}_full" style="display:none">${esc(text)} <button onclick="document.getElementById('${id}_full').style.display='none';document.getElementById('${id}_short').style.display='inline'" class="text-accent text-xs font-medium hover:underline">Show less</button></span>`;
+}
+
+function citationFooter(source, url, ts) {
+  return `<div class="mt-6 pt-3 border-t border-gray-100 text-[11px] text-gray-400">
+    Data sourced from <a href="${esc(url)}" target="_blank" rel="noopener" class="text-accent hover:underline">${esc(source)}</a> &middot; Retrieved ${new Date(ts).toLocaleString()}
+  </div>`;
+}
+
+function renderFDATab(d, ts) {
+  const url = `https://api.fda.gov/drug/label.json?search=set_id:${d.set_id}`;
+  let html = `<div class="mb-4"><h3 class="text-lg font-semibold">${esc(d.brand_name[0] || 'Unknown')}</h3><p class="text-sm text-gray-500">${esc(d.generic_name.join(', '))} &middot; ${esc(d.manufacturer)}</p></div>`;
+
+  if (d.boxed_warning) {
+    html += `<div class="mb-4 p-4 border-l-4 border-destructive bg-red-50 rounded-r-lg"><p class="text-sm font-bold text-destructive mb-1">⚠ BLACK BOX WARNING</p><p class="text-sm leading-relaxed">${esc(d.boxed_warning)}</p></div>`;
+  }
+
+  const sections = [
+    ['Indications & Usage', d.indications, 400],
+    ['Dosage & Administration', d.dosage, 400],
+    ['Contraindications', d.contraindications, 400],
+    ['Warnings & Precautions', d.warnings, 300],
+    ['Drug Interactions', d.interactions, 300],
+    ['Pregnancy', d.pregnancy, 300],
+    ['Nursing Mothers', d.nursing, 300],
+  ];
+
+  for (const [label, val, max] of sections) {
+    if (!val) continue;
+    html += `<div class="py-3"><h4 class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">${label}</h4><p class="text-sm leading-relaxed">${truncate(val, max)}</p></div>`;
+  }
+
+  html += citationFooter('OpenFDA Drug Labels', url, ts);
+  return html;
+}
+
+function renderFAERSTab(d, ts) {
+  const url = 'https://api.fda.gov/drug/event.json';
+  let html = `<p class="text-sm text-gray-500 mb-4">Drug: <span class="font-medium text-dark">${esc(d.drug)}</span> (${d.match} match)</p>`;
+  html += `<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="border-b border-gray-200">
+    <th class="text-left py-2 text-xs font-semibold text-gray-400">Reaction (MedDRA PT)</th>
+    <th class="text-right py-2 text-xs font-semibold text-gray-400">Report Count</th>
+  </tr></thead><tbody>`;
+
+  for (const r of d.reactions) {
+    html += `<tr class="border-b border-gray-100"><td class="py-2">${esc(r.term)}</td><td class="text-right py-2 font-medium">${r.count.toLocaleString()}</td></tr>`;
+  }
+
+  html += `</tbody></table></div>`;
+  html += `<p class="mt-4 text-[11px] text-gray-400 italic">FAERS data represents voluntary reports and does not establish causation or incidence rate. Underreporting is known to occur.</p>`;
+  html += citationFooter('OpenFDA FAERS', url, ts);
+  return html;
+}
+
+function renderRecallsTab(recalls, ts) {
+  const classColors = { 'Class I': 'bg-red-100 text-destructive', 'Class II': 'bg-orange-100 text-orange-700' };
+  let html = '';
+  for (const r of recalls) {
+    html += `<div class="mb-4 p-4 border border-gray-200/50 rounded-xl">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-sm font-semibold">${esc(r.recall_number)}</span>
+        <span class="px-2 py-0.5 text-[10px] font-bold rounded-full ${classColors[r.classification] || 'bg-gray-100'}">${esc(r.classification)}</span>
+      </div>
+      <p class="text-sm text-gray-500 mb-1"><span class="font-medium text-dark">Firm:</span> ${esc(r.recalling_firm)}</p>
+      <p class="text-sm text-gray-500 mb-1"><span class="font-medium text-dark">Product:</span> ${esc(r.product_description?.slice(0, 200))}</p>
+      <p class="text-sm text-gray-500 mb-1"><span class="font-medium text-dark">Reason:</span> ${esc(r.reason_for_recall)}</p>
+      <p class="text-xs text-gray-400 mt-2">${esc(r.recall_initiation_date)}</p>
+    </div>`;
+  }
+  html += citationFooter('OpenFDA Enforcement', 'https://api.fda.gov/drug/enforcement.json', ts);
+  return html;
+}
+
+function renderTrialsTab(trials) {
+  const phaseColors = { 'PHASE1': 'bg-gray-100 text-gray-600', 'PHASE2': 'bg-blue-50 text-blue-700', 'PHASE3': 'bg-green-50 text-green-700', 'PHASE4': 'bg-teal-50 text-teal-700', 'NA': 'bg-gray-50 text-gray-500' };
+  const statusColors = { 'RECRUITING': 'bg-emerald-50 text-emerald-700', 'ACTIVE_NOT_RECRUITING': 'bg-blue-50 text-blue-600', 'COMPLETED': 'bg-gray-100 text-gray-600' };
+  let html = '';
+  for (const t of trials) {
+    const phase = (t.phase || 'NA').replace('PHASE', 'Phase ');
+    const phaseKey = (t.phase || 'NA').replace(' ', '');
+    html += `<div class="mb-3 p-4 border border-gray-200/50 rounded-xl">
+      <div class="flex items-center gap-2 mb-1 flex-wrap">
+        <a href="https://clinicaltrials.gov/study/${t.nctId}" target="_blank" class="text-sm font-semibold text-accent hover:underline">${esc(t.nctId)}</a>
+        <span class="px-2 py-0.5 text-[10px] font-bold rounded-full ${phaseColors[phaseKey] || 'bg-gray-100'}">${phase}</span>
+        <span class="px-2 py-0.5 text-[10px] font-medium rounded-full ${statusColors[t.status] || 'bg-gray-100 text-gray-500'}">${esc(t.status)}</span>
+      </div>
+      <p class="text-sm font-medium mb-1">${esc(t.title)}</p>
+      <p class="text-xs text-gray-500">Enrollment: ${t.enrollment || 'N/A'} &middot; Sponsor: ${esc(t.sponsor)}</p>
+      ${t.primaryOutcome ? `<p class="text-xs text-gray-400 mt-1">Primary outcome: ${esc(t.primaryOutcome.slice(0, 150))}</p>` : ''}
+    </div>`;
+  }
+  html += `<div class="mt-4 pt-3 border-t border-gray-100 text-[11px] text-gray-400">Data sourced from <a href="https://clinicaltrials.gov" target="_blank" class="text-accent hover:underline">ClinicalTrials.gov</a></div>`;
+  return html;
+}
+
+function renderLiteratureTab(articles) {
+  const tierBadge = { 1: ['Tier 1', 'bg-green-50 text-green-700'], 2: ['Tier 2', 'bg-blue-50 text-blue-700'], 3: ['Tier 3', 'bg-gray-100 text-gray-600'], 4: ['Tier 4', 'bg-gray-50 text-gray-500'], 5: ['Tier 5', 'bg-white text-gray-400 border border-gray-200'] };
+  let html = '';
+  for (const a of articles) {
+    const [tierLabel, tierClass] = tierBadge[a.tier] || tierBadge[5];
+    const authorStr = a.authors.length > 3 ? `${a.authors[0]} et al.` : a.authors.join(', ');
+    html += `<div class="mb-3 p-4 border border-gray-200/50 rounded-xl">
+      <div class="flex items-center gap-2 mb-1">
+        <a href="https://pubmed.ncbi.nlm.nih.gov/${a.pmid}" target="_blank" class="text-sm font-semibold text-accent hover:underline">PMID ${esc(a.pmid)}</a>
+        <span class="px-2 py-0.5 text-[10px] font-bold rounded-full ${tierClass}">${tierLabel}</span>
+      </div>
+      <p class="text-sm font-medium mb-1">${esc(a.title)}</p>
+      <p class="text-xs text-gray-500">${esc(authorStr)} &middot; <em>${esc(a.journal)}</em> (${esc(a.year)})</p>
+      ${a.doi ? `<p class="text-xs text-gray-400 mt-0.5">DOI: <a href="https://doi.org/${a.doi}" target="_blank" class="text-accent hover:underline">${esc(a.doi)}</a></p>` : ''}
+      ${a.abstract ? `<div class="mt-2 text-sm text-gray-600">${truncate(a.abstract, 250)}</div>` : ''}
+    </div>`;
+  }
+  html += `<div class="mt-4 pt-3 border-t border-gray-100 text-[11px] text-gray-400">Data sourced from <a href="https://pubmed.ncbi.nlm.nih.gov" target="_blank" class="text-accent hover:underline">PubMed</a></div>`;
+  return html;
+}
+
+function renderMedlinePlusTab(d) {
+  let html = `<p class="text-sm leading-relaxed mb-4">${esc(d.summary)}</p>`;
+  if (d.links.length > 0) {
+    html += `<div class="space-y-1">`;
+    for (const l of d.links) {
+      html += `<a href="${esc(l.url)}" target="_blank" class="block text-sm text-accent hover:underline">${esc(l.label)}</a>`;
+    }
+    html += `</div>`;
+  }
+  html += `<div class="mt-6 pt-3 border-t border-gray-100 text-[11px] text-gray-400">Data sourced from <a href="https://medlineplus.gov" target="_blank" class="text-accent hover:underline">NIH MedlinePlus</a></div>`;
+  return html;
+}
+</script>
+</body>
+</html>
