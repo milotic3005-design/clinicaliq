@@ -22,7 +22,7 @@ export async function resolveRxCUI(drugName: string): Promise<RxDrug | null> {
   try {
     // Try exact match first
     const exactUrl = `${RXNORM_BASE}/rxcui.json?name=${encodeURIComponent(drugName)}&search=2`;
-    const exactRes = await fetch(exactUrl);
+    const exactRes = await fetch(exactUrl, { signal: AbortSignal.timeout(8000) });
     if (exactRes.ok) {
       const data = await exactRes.json();
       const rxcui = data?.idGroup?.rxnormId?.[0];
@@ -31,7 +31,7 @@ export async function resolveRxCUI(drugName: string): Promise<RxDrug | null> {
 
     // Fall back to approximate match
     const approxUrl = `${RXNORM_BASE}/approximateTerm.json?term=${encodeURIComponent(drugName)}&maxEntries=1`;
-    const approxRes = await fetch(approxUrl);
+    const approxRes = await fetch(approxUrl, { signal: AbortSignal.timeout(8000) });
     if (approxRes.ok) {
       const data = await approxRes.json();
       const candidate = data?.approximateGroup?.candidate?.[0];
@@ -45,15 +45,27 @@ export async function resolveRxCUI(drugName: string): Promise<RxDrug | null> {
 }
 
 /**
- * Get autocomplete suggestions for a drug name
+ * Autocomplete drug name suggestions using RxNorm approximate-term endpoint.
+ * approximateTerm supports prefix matching ("vanco" → "Vancomycin"),
+ * unlike spellingsuggestions which only corrects complete misspellings.
  */
 export async function suggestDrugNames(term: string): Promise<string[]> {
   try {
-    const url = `${RXNORM_BASE}/spellingsuggestions.json?name=${encodeURIComponent(term)}`;
-    const res = await fetch(url);
+    const url = `${RXNORM_BASE}/approximateTerm.json?term=${encodeURIComponent(term)}&maxEntries=8&option=0`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
     if (!res.ok) return [];
     const data = await res.json();
-    return (data?.suggestionGroup?.suggestionList?.suggestion || []).slice(0, 8);
+    const candidates = data?.approximateGroup?.candidate || [];
+    const seen = new Set<string>();
+    const results: string[] = [];
+    for (const c of candidates) {
+      const name = c.name as string;
+      if (name && !seen.has(name.toLowerCase())) {
+        seen.add(name.toLowerCase());
+        results.push(name);
+      }
+    }
+    return results.slice(0, 8);
   } catch {
     return [];
   }

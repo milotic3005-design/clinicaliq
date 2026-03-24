@@ -152,7 +152,7 @@ function CHA2DS2VASc() {
       ]}
       interpret={(score) => {
         if (score === 0) return { label: 'Low Risk', color: 'bg-emerald-50 border-emerald-200', detail: '~0.2% annual stroke risk. Anticoagulation generally not recommended.' };
-        if (score === 1) return { label: 'Low–Moderate Risk', color: 'bg-amber-50 border-amber-200', detail: '~0.6% annual stroke risk. Consider anticoagulation (especially if score from factor other than sex).' };
+        if (score === 1) return { label: 'Low–Moderate Risk', color: 'bg-amber-50 border-amber-200', detail: '~0.6% annual stroke risk. If score of 1 is due solely to female sex, do NOT anticoagulate (ACC/AHA 2023 — female sex alone does not independently justify anticoagulation). Consider anticoagulation only if score 1 comes from another risk factor.' };
         const riskMap: Record<number, string> = { 2: '2.2', 3: '3.2', 4: '4.0', 5: '6.7', 6: '9.8', 7: '9.6', 8: '12.5', 9: '15.2' };
         return { label: 'Moderate–High Risk — Anticoagulate', color: 'bg-red-50 border-red-200', detail: `~${riskMap[score] || '>6'}% annual stroke risk. Oral anticoagulation recommended (DOAC preferred over warfarin per ACC/AHA).` };
       }}
@@ -161,36 +161,68 @@ function CHA2DS2VASc() {
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-// Wells DVT
+// Wells DVT — custom component to support the -2 "alternative diagnosis" criterion
 // ══════════════════════════════════════════════════════════════════════════
 
 function WellsDVT() {
+  const items = [
+    { label: 'Active cancer (treatment within 6 months or palliative)', points: 1 },
+    { label: 'Paralysis, paresis, or recent cast of lower extremity', points: 1 },
+    { label: 'Bedridden > 3 days or major surgery within 12 weeks', points: 1 },
+    { label: 'Localized tenderness along deep venous system', points: 1 },
+    { label: 'Entire leg swollen', points: 1 },
+    { label: 'Calf swelling > 3 cm vs. asymptomatic side (10 cm below tibial tuberosity)', points: 1 },
+    { label: 'Pitting edema confined to symptomatic leg', points: 1 },
+    { label: 'Collateral superficial veins (non-varicose)', points: 1 },
+    { label: 'Previously documented DVT', points: 1 },
+    { label: 'Alternative diagnosis at least as likely as DVT', points: -2 },
+  ];
+
+  const [checks, setChecks] = useState(new Array(items.length).fill(false));
+
+  const score = checks.reduce((sum, c, i) => sum + (c ? items[i].points : 0), 0);
+
+  const toggle = (i: number) => setChecks(prev => prev.map((v, idx) => idx === i ? !v : v));
+  const reset = () => setChecks(new Array(items.length).fill(false));
+
+  let result: { label: string; color: string; detail: string };
+  if (score <= 0) {
+    result = { label: 'DVT Unlikely', color: 'bg-emerald-50 border-emerald-200', detail: '~5% prevalence. Check D-dimer → if negative, DVT excluded. If positive, proceed to compression ultrasound.' };
+  } else if (score <= 2) {
+    result = { label: 'Moderate Probability', color: 'bg-amber-50 border-amber-200', detail: '~17% prevalence. Check D-dimer → if negative, DVT unlikely. If positive, proceed to compression ultrasound.' };
+  } else {
+    result = { label: 'DVT Likely', color: 'bg-red-50 border-red-200', detail: '~53% prevalence. Proceed directly to compression ultrasound. Consider empiric anticoagulation while awaiting imaging.' };
+  }
+
   return (
-    <CheckScore
-      title="Wells DVT"
-      items={[
-        { label: 'Active cancer (treatment within 6 months or palliative)', points: 1 },
-        { label: 'Paralysis, paresis, or recent cast of lower extremity', points: 1 },
-        { label: 'Bedridden > 3 days or major surgery within 12 weeks', points: 1 },
-        { label: 'Localized tenderness along deep venous system', points: 1 },
-        { label: 'Entire leg swollen', points: 1 },
-        { label: 'Calf swelling > 3 cm vs. asymptomatic side (10 cm below tibial tuberosity)', points: 1 },
-        { label: 'Pitting edema confined to symptomatic leg', points: 1 },
-        { label: 'Collateral superficial veins (non-varicose)', points: 1 },
-        { label: 'Previously documented DVT', points: 1 },
-      ]}
-      interpret={(score) => {
-        if (score <= 0) return { label: 'DVT Unlikely', color: 'bg-emerald-50 border-emerald-200', detail: '~5% prevalence. Check D-dimer → if negative, DVT excluded. If positive, proceed to ultrasound.' };
-        if (score <= 2) return { label: 'Moderate Probability', color: 'bg-amber-50 border-amber-200', detail: '~17% prevalence. Check D-dimer → if negative, DVT unlikely. If positive, proceed to compression ultrasound.' };
-        return { label: 'DVT Likely', color: 'bg-red-50 border-red-200', detail: '~53% prevalence. Proceed directly to compression ultrasound. Consider empiric anticoagulation while awaiting imaging.' };
-      }}
-    />
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h3 className="font-bold text-slate-800">Wells DVT</h3>
+        <button onClick={reset} className="text-xs text-slate-400 hover:text-slate-600">Reset</button>
+      </div>
+      <div className="space-y-2">
+        {items.map((item, i) => (
+          <label key={i} className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${checks[i] ? 'bg-blue-50 border-blue-200' : 'bg-white border-slate-200 hover:bg-slate-50'}`}>
+            <input type="checkbox" checked={checks[i]} onChange={() => toggle(i)} className="mt-0.5 w-4 h-4 rounded text-[#007AFF] focus:ring-[#007AFF]/20 border-slate-300" />
+            <span className="text-sm text-slate-700 flex-1">{item.label}</span>
+            <span className={`text-xs font-bold shrink-0 ${item.points < 0 ? 'text-red-600' : 'text-slate-500'}`}>
+              {item.points > 0 ? `+${item.points}` : item.points}
+            </span>
+          </label>
+        ))}
+      </div>
+      <div className={`p-4 rounded-2xl border ${result.color}`}>
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Score</span>
+          <span className="text-2xl font-black text-slate-900">{score}</span>
+        </div>
+        <p className="text-sm font-bold text-slate-800">{result.label}</p>
+        <p className="text-xs text-slate-600 mt-1 leading-relaxed">{result.detail}</p>
+      </div>
+      <p className="text-[10px] text-slate-400">Wells et al. 1997/2003. Score ≤0: unlikely; 1–2: moderate; ≥3: likely. The −2 criterion ("alternative diagnosis") is essential and may push score below 0.</p>
+    </div>
   );
 }
-
-// Note: "Alternative diagnosis as likely or more likely (-2 points)" is handled
-// by placing it as a separate toggle below since CheckScore only does positive points.
-// For simplicity, we include a note in the component.
 
 // ══════════════════════════════════════════════════════════════════════════
 // Wells PE
@@ -354,7 +386,7 @@ function MELDScore() {
           <p className="text-xs text-slate-600 mt-1 leading-relaxed">{detail}</p>
         </div>
       )}
-      <p className="text-[10px] text-slate-400">MELD formula: 3.78×ln(bilirubin) + 11.2×ln(INR) + 9.57×ln(creatinine) + 6.43. Range 6–40.</p>
+      <p className="text-[10px] text-slate-400">Original MELD (2001) formula: 3.78×ln(Bili) + 11.2×ln(INR) + 9.57×ln(Cr) + 6.43. Clamped 6–40. Note: UNOS uses MELD-Na for organ allocation; MELD 3.0 (2022) is the current AASLD-recommended version. This calculator computes original MELD only — not MELD-Na or MELD 3.0.</p>
     </div>
   );
 }

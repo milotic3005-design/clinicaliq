@@ -60,7 +60,7 @@ const LAB_DATA: LabTest[] = [
   { name: 'Anti-Xa (heparin)', specimen: 'Plasma', conventional: 'UFH: 0.3–0.7 IU/mL  LMWH: 0.5–1.0 IU/mL', category: 'Coagulation' },
 
   // ── Cardiac ──
-  { name: 'Troponin I (hs)', specimen: 'Serum', conventional: '< 0.04 ng/mL', critical: '>0.4 ng/mL', notes: 'Serial q3–6h; rising pattern diagnostic', category: 'Cardiac' },
+  { name: 'Troponin I (hs)', specimen: 'Serum', conventional: '< 0.04 ng/mL (assay-dependent — verify institutional 99th percentile URL)', critical: '>0.4 ng/mL (approx; 10× URL — assay-dependent)', notes: 'Serial q3h (0/3h rule-out); rising or falling pattern ≥20% required for NSTEMI diagnosis; 99th percentile varies by platform (Abbott, Roche, Siemens)', category: 'Cardiac' },
   { name: 'BNP', specimen: 'Plasma', conventional: '< 100 pg/mL', notes: '>400 pg/mL suggests HF; 100–400 = gray zone', category: 'Cardiac' },
   { name: 'NT-proBNP', specimen: 'Plasma', conventional: '< 125 pg/mL (< 75 yr)', notes: 'Age-dependent: >450 (<50yr), >900 (50-75), >1800 (>75)', category: 'Cardiac' },
   { name: 'CK (total)', specimen: 'Serum', conventional: 'M: 55–170 U/L  F: 30–135 U/L', category: 'Cardiac' },
@@ -103,7 +103,7 @@ const LAB_DATA: LabTest[] = [
   { name: 'Phenytoin (total)', specimen: 'Serum', conventional: '10–20 μg/mL', critical: '>25 μg/mL', notes: 'Check free level if albumin low', category: 'Drug Levels' },
   { name: 'Valproic Acid', specimen: 'Serum', conventional: '50–100 μg/mL', critical: '>150 μg/mL', category: 'Drug Levels' },
   { name: 'Lithium', specimen: 'Serum', conventional: '0.6–1.2 mEq/L', critical: '>1.5 mEq/L', category: 'Drug Levels' },
-  { name: 'Digoxin', specimen: 'Serum', conventional: '0.8–2.0 ng/mL', critical: '>2.4 ng/mL', notes: 'Draw ≥6h post-dose; lower target (0.5–0.9) for HF', category: 'Drug Levels' },
+  { name: 'Digoxin', specimen: 'Serum', conventional: '0.5–0.9 ng/mL (HF); up to 2.0 ng/mL (rate control in AFib)', critical: '>2.0 ng/mL', notes: 'Draw ≥6h post-dose; HF target 0.5–0.9 ng/mL (DIG trial reanalysis, JAMA 2003); higher range for rate control only', category: 'Drug Levels' },
   { name: 'Theophylline', specimen: 'Serum', conventional: '10–20 μg/mL', critical: '>20 μg/mL', category: 'Drug Levels' },
   { name: 'Tacrolimus', specimen: 'Blood', conventional: '5–15 ng/mL (varies by indication)', notes: 'Target varies by transplant type and time post-transplant', category: 'Drug Levels' },
   { name: 'Cyclosporine', specimen: 'Blood', conventional: '100–400 ng/mL (varies)', category: 'Drug Levels' },

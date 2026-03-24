@@ -180,7 +180,7 @@ const RAW_DRUG_DB: RawDrug[] = [
   makeOral("o20", "Abiraterone", "Zytiga", "CYP17 Inhibitor", ["250 mg", "500 mg"], "Take empty stomach."),
 
   // --- ANTIBIOTICS (31) ---
-  makeIV("a1", "Vancomycin", "Vancocin", "Antibiotic", "Glycopeptide", ["500 mg", "1 g", "5 g"], "SWFI", "10 mL", "50 mg/mL", "0.9% NS or D5W", "100-250 mL", "5 mg/mL", "Max 10-15 mg/min", "60-120 mins", "No", "No", "No", "Category 2", "4 days", "10 days", "N/A", "USP <797>", "Room Temp", true, true),
+  makeIV("a1", "Vancomycin", "Vancocin", "Antibiotic", "Glycopeptide", ["500 mg", "1 g", "5 g"], "SWFI", "10 mL", "50 mg/mL", "0.9% NS or D5W", "100-250 mL", "5 mg/mL", "Max 10-15 mg/min", "60-120 mins", "No", "No", "No", "Category 2", "4 days", "10 days", "N/A", "USP <797>", "Room Temp", true, false),
   makeIV("a2", "Piperacillin/Tazobactam", "Zosyn", "Antibiotic", "Penicillin", ["2.25 g", "3.375 g", "4.5 g"], "0.9% NS", "10 mL", "200 mg/mL", "0.9% NS or D5W", "50-150 mL", "Varies", "Various", "30 mins - 4 hrs", "No", "No", "No", "Category 2", "24 hours", "48 hours", "N/A", "USP <797>", "Room Temp", false, false),
   makeIV("a3", "Cefepime", "Maxipime", "Antibiotic", "Cephalosporin", ["1 g", "2 g"], "SWFI", "10 mL", "100 mg/mL", "0.9% NS or D5W", "50-100 mL", "1-40 mg/mL", "Various", "30 mins", "No", "No", "No", "Category 2", "24 hours", "7 days", "N/A", "USP <797>", "Room Temp", false, false),
   makeIV("a4", "Meropenem", "Merrem", "Antibiotic", "Carbapenem", ["500 mg", "1 g"], "SWFI", "10 mL", "50 mg/mL", "0.9% NS", "50-100 mL", "1-20 mg/mL", "Various", "15-30 mins - 3 hrs", "No", "No", "No", "Category 1", "4 hours (NS)", "24 hours", "N/A", "USP <797>", "Room Temp", false, false),
@@ -268,7 +268,7 @@ const RAW_DRUG_DB: RawDrug[] = [
   makeSubQ("s19", "Galcanezumab", "Emgality", "Biologic", "CGRP Antagonist", ["120 mg"], "7 days"),
   makeSubQ("s20", "Evolocumab", "Repatha", "Biologic", "PCSK9 Inhibitor", ["140 mg"], "30 days"),
   makeSubQ("s21", "Alirocumab", "Praluent", "Biologic", "PCSK9 Inhibitor", ["75 mg", "150 mg"], "30 days"),
-  makeSubQ("s22", "Inclisiran", "Leqvio", "Biologic", "PCSK9-directed siRNA", ["284 mg"], "Until Expiration", "Store at RT."),
+  makeSubQ("s22", "Inclisiran", "Leqvio", "Biologic", "PCSK9-directed siRNA", ["284 mg"], "30 days (if removed from refrigerator)", "Store refrigerated 2–8°C; may be kept at room temp (≤30°C) for up to 30 days once removed."),
   makeSubQ("s23", "Teriparatide", "Forteo", "Biologic", "PTH Analog", ["600 mcg"], "Do not store at RT", "Discard pen 28 days after first use."),
   makeSubQ("s24", "Abaloparatide", "Tymlos", "Biologic", "PTH Analog", ["3120 mcg"], "30 days (In-Use)"),
   makeSubQ("s25", "Romosozumab", "Evenity", "Biologic", "Sclerostin Inhibitor", ["105 mg"], "30 days"),

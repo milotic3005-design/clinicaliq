@@ -47,8 +47,9 @@ function parseIntoBullets(raw: string): ParsedItem[] {
     }
   }
 
-  // Try numbered list split: "1. ... 2. ... 3. ..."
-  const numberedParts = text.split(/(?:^|\n)\s*(\d+)\.\s+/);
+  // Try numbered list split on new-line-anchored "1. ... 2. ..."
+  // Use \n anchor (not ^) to avoid splitting on mid-sentence decimals like "2.5 mg/kg"
+  const numberedParts = text.split(/\n\s*(\d+)\.\s+/);
   if (numberedParts.length >= 5) {
     const items: ParsedItem[] = [];
     // First element is text before "1."
@@ -120,12 +121,16 @@ function cleanSentence(s: string): string {
 
 function HighlightText({ text, query }: { text: string; query: string }) {
   if (!query || query.length < 2) return <>{text}</>;
-  const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-  const parts = text.split(regex);
+  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // Use split regex with capturing group to get alternating [non-match, match, non-match, ...]
+  const splitRegex = new RegExp(`(${escaped})`, 'gi');
+  // Use a separate non-global regex for the .test() check to avoid lastIndex state bug
+  const testRegex = new RegExp(escaped, 'i');
+  const parts = text.split(splitRegex);
   return (
     <>
       {parts.map((part, i) =>
-        regex.test(part) ? (
+        testRegex.test(part) ? (
           <mark key={i} className="bg-yellow-200/70 text-inherit rounded-sm px-0.5">{part}</mark>
         ) : (
           <span key={i}>{part}</span>
@@ -256,7 +261,7 @@ export function FDALabelTab({ data }: FDALabelTabProps) {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h3 className="text-lg font-bold text-[#1C1C1E]">
-            {data.brand_name[0] || 'Unknown Brand'}
+            {data.brand_name?.[0] || 'Unknown Brand'}
           </h3>
           <p className="text-sm text-muted-foreground">
             {data.generic_name.join(', ')} · {data.manufacturer}

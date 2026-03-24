@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
   try {
     const { drugs } = (await request.json()) as { drugs: string[] };
 
-    if (!drugs || drugs.length < 2) {
+    if (!Array.isArray(drugs) || drugs.length < 2) {
       return NextResponse.json(
         { error: 'At least 2 drugs required' },
         { status: 400 }
@@ -20,9 +20,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Sanitize: ensure each element is a non-empty string of reasonable length
+    const sanitized = drugs
+      .map((d: unknown) => String(d).trim())
+      .filter((d: string) => d.length >= 2 && d.length <= 120);
+
+    if (sanitized.length < 2) {
+      return NextResponse.json(
+        { error: 'At least 2 valid drug names required' },
+        { status: 400 }
+      );
+    }
+
     // Resolve all drug names to RxCUIs in parallel
     const resolved = await Promise.all(
-      drugs.map(async (name) => {
+      sanitized.map(async (name) => {
         const result = await resolveRxCUI(name);
         return { input: name, resolved: result };
       })
@@ -48,8 +60,7 @@ export async function POST(request: NextRequest) {
       resolved_drugs: resolvedDrugs.map(r => ({ input: r.input, ...r.resolved })),
       unresolved_drugs: unresolved,
     });
-  } catch (error) {
-    console.error('Interaction check error:', error);
+  } catch {
     return NextResponse.json(
       { error: 'Interaction check failed' },
       { status: 500 }

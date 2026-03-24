@@ -55,7 +55,7 @@ const ANTIBIOTICS: Antibiotic[] = [
   { name: 'Amikacin', class: 'Aminoglycoside', gramPos: 'some', gramNeg: 'yes', anaerobes: 'no', atypicals: 'no', pseudomonas: 'yes', mrsa: 'no', esbl: 'some', notes: 'Broadest aminoglycoside; some MDR gram-neg activity' },
 
   // Miscellaneous
-  { name: 'Metronidazole', class: 'Nitroimidazole', gramPos: 'no', gramNeg: 'no', anaerobes: 'yes', atypicals: 'no', pseudomonas: 'no', mrsa: 'no', esbl: 'no', notes: 'Anaerobe-only; C. diff (oral); CNS penetration; disulfiram reaction with EtOH' },
+  { name: 'Metronidazole', class: 'Nitroimidazole', gramPos: 'no', gramNeg: 'no', anaerobes: 'yes', atypicals: 'no', pseudomonas: 'no', mrsa: 'no', esbl: 'no', notes: 'Anaerobe-only including gram-positive anaerobes (Peptostreptococcus, Clostridium); C. diff (oral); CNS penetration; disulfiram reaction with EtOH' },
   { name: 'TMP-SMX', class: 'Sulfonamide', gramPos: 'yes', gramNeg: 'yes', anaerobes: 'no', atypicals: 'no', pseudomonas: 'no', mrsa: 'yes', esbl: 'no', notes: 'CA-MRSA (SSTI); UTI; PJP prophylaxis; hyperkalemia; rash' },
   { name: 'Doxycycline', class: 'Tetracycline', gramPos: 'some', gramNeg: 'some', anaerobes: 'no', atypicals: 'yes', pseudomonas: 'no', mrsa: 'some', esbl: 'no', notes: 'Atypicals, SSTI (CA-MRSA), tick-borne, STIs; photosensitivity' },
   { name: 'Azithromycin', class: 'Macrolide', gramPos: 'yes', gramNeg: 'some', anaerobes: 'no', atypicals: 'yes', pseudomonas: 'no', mrsa: 'no', esbl: 'no', notes: 'CAP (atypical coverage), STIs; QTc prolongation; increasing resistance' },
@@ -64,7 +64,7 @@ const ANTIBIOTICS: Antibiotic[] = [
   { name: 'Fosfomycin', class: 'Phosphonic acid', gramPos: 'yes', gramNeg: 'yes', anaerobes: 'no', atypicals: 'no', pseudomonas: 'no', mrsa: 'some', esbl: 'yes', notes: 'Single-dose uncomplicated UTI; some ESBL/VRE activity' },
 
   // Antifungals
-  { name: 'Fluconazole', class: 'Azole Antifungal', gramPos: 'no', gramNeg: 'no', anaerobes: 'no', atypicals: 'no', pseudomonas: 'no', mrsa: 'no', esbl: 'no', notes: 'Candida (not C. glabrata/krusei); CNS penetration; many drug interactions' },
+  { name: 'Fluconazole', class: 'Azole Antifungal', gramPos: 'no', gramNeg: 'no', anaerobes: 'no', atypicals: 'no', pseudomonas: 'no', mrsa: 'no', esbl: 'no', notes: 'Candida albicans/tropicalis/parapsilosis; variable/SDD against Nakaseomyces glabrata (C. glabrata); intrinsic resistance in Pichia kudriavzevii (C. krusei); CNS penetration; many drug interactions' },
   { name: 'Micafungin', class: 'Echinocandin', gramPos: 'no', gramNeg: 'no', anaerobes: 'no', atypicals: 'no', pseudomonas: 'no', mrsa: 'no', esbl: 'no', notes: 'Empiric candidemia (covers most Candida spp); NO CNS penetration; NO mold activity' },
 ];
 
