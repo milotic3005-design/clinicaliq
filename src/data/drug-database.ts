@@ -13,7 +13,7 @@ const CLINICAL_SUMMARIES: Record<string, ClinicalSummary> = {
   "Cyclophosphamide": { pearls: "Hemorrhagic cystitis risk (hydrate well, +/- mesna for high doses).", dosing: "Varies widely (e.g., 600 mg/m2 IV q2-3 weeks).", monitoring: "CBC, urinalysis, BUN/SCr." },
   "Fluorouracil": { pearls: "DPD deficiency increases toxicity risk. Continuous infusion = higher hand-foot syndrome risk.", dosing: "Varies (bolus vs continuous, e.g., 2400 mg/m2 over 46h).", monitoring: "CBC, LFTs, oral mucosa." },
   "Pembrolizumab": { pearls: "Immune-mediated toxicities (pneumonitis, colitis, endocrinopathies).", dosing: "200 mg q3w or 400 mg q6w IV.", monitoring: "Thyroid panel, LFTs, SCr, respiratory sx." },
-  "Vancomycin": { pearls: "Red man syndrome with rapid infusion. AUC/MIC targeting preferred.", dosing: "15-20 mg/kg IV q8-12h (adjust for renal fxn).", monitoring: "Trough/AUC levels, SCr, auditory fxn." },
+  "Vancomycin": { pearls: "Red man syndrome with rapid infusion (premedicate or slow rate). AUC/MIC targeting is preferred per ASHP/IDSA/SIDP 2020 guidelines.", dosing: "15-20 mg/kg IV q8-12h (adjust for renal function; AUC-guided dosing preferred).", monitoring: "AUC/MIC monitoring preferred (target AUC24 400–600 mg·h/L; trough-only monitoring no longer recommended as primary strategy). SCr baseline and at least q48–72h. Auditory function for prolonged courses." },
   "Immune Globulin Intravenous (IVIG)": { pearls: "Do not mix with other drugs. Infusion rate is concentration and brand-dependent. Risk of renal failure and thrombosis.", dosing: "Varies widely by indication.", monitoring: "Renal function, urine output, vital signs, signs of thrombosis." },
   "Iron Sucrose": { pearls: "Test dose not required. Monitor for hypotension during infusion.", dosing: "Typically 100-300 mg per dose.", monitoring: "BP, HR, ferritin, TSAT." },
   "Iron Dextran": { pearls: "Boxed warning for fatal anaphylaxis. A 25 mg TEST DOSE is mandatory before the full therapeutic dose.", dosing: "Varies (can be total dose infusion).", monitoring: "Observe for signs of anaphylaxis for at least 1 hour." },
@@ -44,7 +44,7 @@ const CLINICAL_CDS: Record<string, CDSEntry> = {
 // CADD DEFAULTS
 // ==========================================
 export const CADD_DEFAULTS: Record<string, CADDDefault> = {
-  "Vancomycin": { dose: 4500, freq: 8, conc: 33.75, kvo: 2 },
+  "Vancomycin": { dose: 1500, freq: 12, conc: 5, kvo: 2 },
   "Cefazolin": { dose: 6000, freq: 8, conc: 50, kvo: 2 },
   "Cefepime": { dose: 6000, freq: 8, conc: 50, kvo: 2 },
   "Piperacillin/Tazobactam": { dose: 13500, freq: 8, conc: 67.5, kvo: 2 },
