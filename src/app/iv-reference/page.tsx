@@ -76,24 +76,83 @@ export default function IVReferencePage() {
   }, [searchTerm, selectedCategory, showAntibiotics, showOncology, showBiologics, showSupportive]);
 
   return (
-    <div className="min-h-screen bg-[#f5f5f7] font-sans text-slate-900 pb-12 selection:bg-blue-200">
-      <header className="bg-white/70 backdrop-blur-xl border-b border-slate-200/50 sticky top-0 z-20">
-        <div className="max-w-7xl mx-auto px-6 py-5 flex flex-col md:flex-row justify-between items-center gap-4">
+    <div className="min-h-screen pb-12" style={{ background: '#f8fafc', color: '#181d26' }}>
+      {/* Header */}
+      <header
+        className="sticky top-0 z-20"
+        style={{ background: '#ffffff', borderBottom: '1px solid #e0e2e6' }}
+      >
+        <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="bg-blue-600 p-2 rounded-xl text-white shadow-sm"><Activity className="w-5 h-5" /></div>
+            <div
+              style={{
+                background: '#1b61c9',
+                borderRadius: '12px',
+                padding: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: 'rgba(45,127,249,0.28) 0px 1px 3px',
+              }}
+            >
+              <Activity className="w-5 h-5 text-white" />
+            </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-slate-900 cursor-pointer" onClick={handleGoHome}>IV Infusion Reference</h1>
-              <p className="text-xs font-medium text-slate-500 mt-0.5">Clinical Decision Support Dashboard &bull; {DRUG_DB.length} Medications</p>
+              <h1
+                className="text-lg font-semibold cursor-pointer"
+                style={{ color: '#181d26', letterSpacing: '0.08px' }}
+                onClick={handleGoHome}
+              >
+                IV Infusion Reference
+              </h1>
+              <p className="text-xs mt-0.5" style={{ color: 'rgba(4,14,32,0.69)', letterSpacing: '0.07px' }}>
+                Clinical Decision Support Dashboard &bull; {DRUG_DB.length} Medications
+              </p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <a href="/" className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm">
+          <div className="flex items-center gap-2">
+            <a
+              href="/"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition-all"
+              style={{
+                background: '#ffffff',
+                border: '1px solid #e0e2e6',
+                color: '#181d26',
+                letterSpacing: '0.08px',
+                boxShadow: 'rgba(15,48,106,0.05) 0px 0px 20px',
+              }}
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = '#1b61c9'}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = '#e0e2e6'}
+            >
               <Home className="w-4 h-4" /> ClinicalIQ
             </a>
-            <button onClick={handleGoHome} className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm">
+            <button
+              onClick={handleGoHome}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition-all"
+              style={{
+                background: '#ffffff',
+                border: '1px solid #e0e2e6',
+                color: '#181d26',
+                letterSpacing: '0.08px',
+                boxShadow: 'rgba(15,48,106,0.05) 0px 0px 20px',
+              }}
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = '#1b61c9'}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = '#e0e2e6'}
+            >
               <Home className="w-4 h-4" /> Home
             </button>
-            <button onClick={() => setIsCaddOpen(true)} className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm transform hover:-translate-y-0.5">
+            <button
+              onClick={() => setIsCaddOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition-all"
+              style={{
+                background: '#1b61c9',
+                color: '#ffffff',
+                letterSpacing: '0.08px',
+                boxShadow: 'rgba(0,0,0,0.32) 0px 0px 1px, rgba(0,0,0,0.08) 0px 0px 2px, rgba(45,127,249,0.28) 0px 1px 3px',
+              }}
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#254fad'}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = '#1b61c9'}
+            >
               <Calculator className="w-4 h-4" /> CADD Calculator
             </button>
           </div>
@@ -101,46 +160,79 @@ export default function IVReferencePage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 md:px-6 pt-8">
-        <div className="flex flex-col xl:flex-row gap-4 mb-8">
+        {/* Search + Filters */}
+        <div className="flex flex-col xl:flex-row gap-3 mb-8">
           <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'rgba(4,14,32,0.4)' }} />
             <input
               type="text"
               placeholder="Search medications..."
-              className="w-full bg-white border border-transparent shadow-sm hover:shadow-md pl-12 pr-4 py-3.5 rounded-2xl text-[15px] font-medium placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+              className="w-full pl-11 pr-4 py-3 text-sm font-medium rounded-xl transition-all focus:outline-none"
+              style={{
+                background: '#ffffff',
+                border: '1px solid #e0e2e6',
+                color: '#181d26',
+                letterSpacing: '0.08px',
+                boxShadow: 'rgba(15,48,106,0.05) 0px 0px 20px',
+              }}
+              onFocus={e => (e.currentTarget as HTMLElement).style.borderColor = '#1b61c9'}
+              onBlur={e => (e.currentTarget as HTMLElement).style.borderColor = '#e0e2e6'}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 bg-white p-2 rounded-2xl shadow-sm">
-            <div className="pl-3 pr-1 text-slate-400"><Filter className="w-4 h-4" /></div>
-            <select className="bg-slate-50 border-none rounded-xl px-4 py-2 text-sm font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer appearance-none pr-8" value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}>
+          <div
+            className="flex flex-wrap items-center gap-2 p-2 rounded-xl"
+            style={{ background: '#ffffff', border: '1px solid #e0e2e6', boxShadow: 'rgba(15,48,106,0.05) 0px 0px 20px' }}
+          >
+            <div className="pl-2 pr-1" style={{ color: 'rgba(4,14,32,0.4)' }}><Filter className="w-4 h-4" /></div>
+            <select
+              className="rounded-lg px-3 py-1.5 text-sm font-medium appearance-none cursor-pointer focus:outline-none"
+              style={{
+                background: '#f8fafc',
+                border: '1px solid #e0e2e6',
+                color: '#181d26',
+                letterSpacing: '0.08px',
+              }}
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+            >
               <option value="All">All Classes ({totalCount})</option>
               <option value="Oncology">Oncology ({oncologyCount})</option>
               <option value="Antibiotic">Antibiotics ({antibioticCount})</option>
               <option value="Biologic">Biologics ({biologicCount})</option>
               <option value="Supportive Care">Supportive Care ({supportiveCount})</option>
             </select>
-            <div className="h-6 w-px bg-slate-200 mx-1" />
+            <div className="h-5 w-px mx-1" style={{ background: '#e0e2e6' }} />
             {[
-              { label: 'Antibiotics', state: showAntibiotics, set: setShowAntibiotics, color: 'blue' },
-              { label: 'Oncology', state: showOncology, set: setShowOncology, color: 'indigo' },
-              { label: 'Biologics', state: showBiologics, set: setShowBiologics, color: 'purple' },
-              { label: 'Supportive Care', state: showSupportive, set: setShowSupportive, color: 'amber' },
+              { label: 'Antibiotics', state: showAntibiotics, set: setShowAntibiotics },
+              { label: 'Oncology', state: showOncology, set: setShowOncology },
+              { label: 'Biologics', state: showBiologics, set: setShowBiologics },
+              { label: 'Supportive Care', state: showSupportive, set: setShowSupportive },
             ].map(f => (
-              <label key={f.label} className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 px-3 py-2 rounded-xl transition-colors">
-                <input type="checkbox" className={`w-4 h-4 rounded text-${f.color}-500 focus:ring-${f.color}-500/20 border-slate-300 transition-all`} checked={f.state} onChange={e => f.set(e.target.checked)} />
-                <span className="text-sm font-semibold text-slate-700">{f.label}</span>
+              <label key={f.label} className="flex items-center gap-1.5 cursor-pointer px-2 py-1.5 rounded-lg transition-colors" style={{ letterSpacing: '0.07px' }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = '#f8fafc'}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
+              >
+                <input
+                  type="checkbox"
+                  className="w-4 h-4 rounded"
+                  style={{ accentColor: '#1b61c9' }}
+                  checked={f.state}
+                  onChange={e => f.set(e.target.checked)}
+                />
+                <span className="text-sm font-medium" style={{ color: '#181d26' }}>{f.label}</span>
               </label>
             ))}
           </div>
         </div>
 
+        {/* Landing page */}
         {isLandingPage ? (
           <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div>
-              <h2 className="text-xl font-bold text-slate-900 mb-4 px-2">Drug Categories</h2>
+              <h2 className="text-lg font-semibold mb-4 px-1" style={{ color: '#181d26', letterSpacing: '0.12px' }}>Drug Categories</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <CategoryJumpButton icon={ShieldPlus} title={`Oncology (${oncologyCount})`} desc="Chemotherapy agents, alkylators, and therapies." colorClass="hover:border-indigo-300" onClick={() => handleCategoryJump('Oncology')} />
                 <CategoryJumpButton icon={Pill} title={`Antibiotics (${antibioticCount})`} desc="Penicillins, cephalosporins, and antimicrobials." colorClass="hover:border-blue-300" onClick={() => handleCategoryJump('Antibiotic')} />
@@ -149,22 +241,23 @@ export default function IVReferencePage() {
               </div>
             </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-900 mb-4 px-2">Clinical Utilities</h2>
-              <div className="grid grid-cols-1 gap-6">
-                <ClinicalCalculatorContainer />
-              </div>
+              <h2 className="text-lg font-semibold mb-4 px-1" style={{ color: '#181d26', letterSpacing: '0.12px' }}>Clinical Utilities</h2>
+              <ClinicalCalculatorContainer />
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-in fade-in duration-300">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 animate-in fade-in duration-300">
             {filteredDrugs.map(drug => (
               <DrugCard key={drug.id} drug={drug} onClick={() => setSelectedDrug(drug)} />
             ))}
             {filteredDrugs.length === 0 && (
-              <div className="col-span-full py-20 flex flex-col items-center justify-center text-slate-400 bg-white rounded-[32px] border border-slate-100 border-dashed">
-                <Search className="w-12 h-12 mb-4 text-slate-300" />
-                <p className="text-lg font-medium text-slate-600">No medications found</p>
-                <p className="text-sm mt-1">Try adjusting your filters or search term.</p>
+              <div
+                className="col-span-full py-20 flex flex-col items-center justify-center rounded-2xl border border-dashed"
+                style={{ background: '#ffffff', borderColor: '#e0e2e6' }}
+              >
+                <Search className="w-10 h-10 mb-3" style={{ color: 'rgba(4,14,32,0.2)' }} />
+                <p className="text-base font-medium" style={{ color: 'rgba(4,14,32,0.69)' }}>No medications found</p>
+                <p className="text-sm mt-1" style={{ color: 'rgba(4,14,32,0.4)' }}>Try adjusting your filters or search term.</p>
               </div>
             )}
           </div>
