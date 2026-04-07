@@ -16,6 +16,31 @@ export interface DrugSummary {
   notes: string | null;
 }
 
+/** Fetch from Gemini with up to `maxRetries` retries on 429. */
+async function fetchGemini(body: string, maxRetries = 3): Promise<Response> {
+  let lastResp: Response | null = null;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GOOGLE_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body,
+        signal: AbortSignal.timeout(30000),
+      }
+    );
+    if (resp.status !== 429) return resp;
+    lastResp = resp;
+    if (attempt < maxRetries) {
+      // Honour Retry-After header, fallback to exponential backoff (2s, 4s, 8s)
+      const retryAfter = resp.headers.get('Retry-After');
+      const waitMs = retryAfter ? parseFloat(retryAfter) * 1000 : 2000 * Math.pow(2, attempt);
+      await new Promise(r => setTimeout(r, waitMs));
+    }
+  }
+  return lastResp!;
+}
+
 export async function POST(req: NextRequest) {
   if (!GOOGLE_KEY) {
     return NextResponse.json(
@@ -58,18 +83,17 @@ Return ONLY valid JSON — no markdown fences, no prose — in this exact struct
 }`;
 
   try {
-    const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GOOGLE_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 1500, temperature: 0.2 },
-        }),
-        signal: AbortSignal.timeout(30000),
-      }
-    );
+    const resp = await fetchGemini(JSON.stringify({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: { maxOutputTokens: 1500, temperature: 0.2 },
+    }));
+
+    if (resp.status === 429) {
+      return NextResponse.json(
+        { error: 'Gemini rate limit reached. Please wait a moment and try again.' },
+        { status: 429 }
+      );
+    }
 
     if (!resp.ok) {
       const err = await resp.text();

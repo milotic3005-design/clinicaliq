@@ -4,6 +4,29 @@ const GOOGLE_KEY = process.env.GOOGLE_CSE_KEY;
 
 interface Message { role: 'user' | 'assistant'; content: string; }
 
+/** Fetch Gemini streaming with up to `maxRetries` retries on 429. */
+async function fetchGeminiStream(body: string, maxRetries = 3): Promise<Response> {
+  let lastResp: Response | null = null;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?key=${GOOGLE_KEY}&alt=sse`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body,
+      }
+    );
+    if (resp.status !== 429) return resp;
+    lastResp = resp;
+    if (attempt < maxRetries) {
+      const retryAfter = resp.headers.get('Retry-After');
+      const waitMs = retryAfter ? parseFloat(retryAfter) * 1000 : 2000 * Math.pow(2, attempt);
+      await new Promise(r => setTimeout(r, waitMs));
+    }
+  }
+  return lastResp!;
+}
+
 export async function POST(req: NextRequest) {
   if (!GOOGLE_KEY) {
     return new Response(
@@ -42,18 +65,18 @@ export async function POST(req: NextRequest) {
   }));
 
   try {
-    const geminiResp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?key=${GOOGLE_KEY}&alt=sse`,
-      {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: systemText }] },
-          contents: geminiContents,
-          generationConfig: { maxOutputTokens: 1500, temperature: 0.3 },
-        }),
-      }
-    );
+    const geminiResp = await fetchGeminiStream(JSON.stringify({
+      systemInstruction: { parts: [{ text: systemText }] },
+      contents: geminiContents,
+      generationConfig: { maxOutputTokens: 1500, temperature: 0.3 },
+    }));
+
+    if (geminiResp.status === 429) {
+      return new Response(
+        JSON.stringify({ error: 'Gemini rate limit reached. Please wait a moment and try again.' }),
+        { status: 429, headers: { 'content-type': 'application/json' } }
+      );
+    }
 
     if (!geminiResp.ok) {
       const errText = await geminiResp.text();
