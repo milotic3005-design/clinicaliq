@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Search, Filter, Home, Calculator, ChevronRight, ShieldPlus, Pill, Syringe, HeartPulse, Activity } from 'lucide-react';
+import { Search, Filter, Home, Calculator, ChevronRight, ShieldPlus, Pill, Syringe, HeartPulse, Activity, BookSearch } from 'lucide-react';
 import { DRUG_DB } from '@/data/drug-database';
 import { DrugCard } from '@/components/iv-reference/drug-card';
 import { DrugDetailModal } from '@/components/iv-reference/drug-detail-modal';
 import { CaddModal } from '@/components/iv-reference/cadd-calculator';
 import { ClinicalCalculatorContainer } from '@/components/iv-reference/clinical-calculators';
+import { YSiteCompatibilityChecker } from '@/components/iv-reference/ysite-compatibility';
+import { DrugResearchPanel } from '@/components/iv-reference/drug-research-panel';
 import type { Drug } from '@/lib/iv-reference-types';
 import type { LucideIcon } from 'lucide-react';
 
@@ -35,6 +37,7 @@ export default function IVReferencePage() {
   const [showSupportive, setShowSupportive] = useState(false);
   const [selectedDrug, setSelectedDrug] = useState<Drug | null>(null);
   const [isCaddOpen, setIsCaddOpen] = useState(false);
+  const [isResearchOpen, setIsResearchOpen] = useState(false);
 
   const totalCount = DRUG_DB.length;
   const oncologyCount = DRUG_DB.filter(d => d.category === 'Oncology').length;
@@ -93,6 +96,9 @@ export default function IVReferencePage() {
             <button onClick={handleGoHome} className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm">
               <Home className="w-4 h-4" /> Home
             </button>
+            <button onClick={() => setIsResearchOpen(true)} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm transform hover:-translate-y-0.5">
+              <BookSearch className="w-4 h-4" /> Drug Research
+            </button>
             <button onClick={() => setIsCaddOpen(true)} className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm transform hover:-translate-y-0.5">
               <Calculator className="w-4 h-4" /> CADD Calculator
             </button>
@@ -150,8 +156,9 @@ export default function IVReferencePage() {
             </div>
             <div>
               <h2 className="text-xl font-bold text-slate-900 mb-4 px-2">Clinical Utilities</h2>
-              <div className="grid grid-cols-1 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <ClinicalCalculatorContainer />
+                <YSiteCompatibilityChecker />
               </div>
             </div>
           </div>
@@ -173,6 +180,7 @@ export default function IVReferencePage() {
 
       {selectedDrug && <DrugDetailModal drug={selectedDrug} onClose={() => setSelectedDrug(null)} />}
       <CaddModal isOpen={isCaddOpen} onClose={() => setIsCaddOpen(false)} drugDb={DRUG_DB} />
+      <DrugResearchPanel isOpen={isResearchOpen} onClose={() => setIsResearchOpen(false)} />
     </div>
   );
 }
