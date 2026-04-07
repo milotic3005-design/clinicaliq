@@ -19,6 +19,9 @@ export function VancoCalculator() {
   const [tToPeak, setTToPeak] = useState('');
   const [tBetween, setTBetween] = useState('');
   const [targetParam, setTargetParam] = useState('auc-500');
+  const [desiredDose, setDesiredDose] = useState('');
+  const [desiredInterval, setDesiredInterval] = useState('12');
+  const [vdWeightBasis, setVdWeightBasis] = useState<'abw' | 'ibw' | 'adjbw'>('abw');
 
   /* ── Empiric / Kinetic calculations ─────────────────────────────── */
 
@@ -52,8 +55,9 @@ export function VancoCalculator() {
     let crcl = ((140 - ageNum) * dosingWeight) / (72 * scrForCrcl);
     if (sex === 'F') crcl *= 0.85;
 
-    // Vd: 0.7 L/kg × actual body weight (ASHP 2020; actual BW even in obesity for Vd)
-    const vd = 0.7 * wtNum;
+    // Vd: 0.7 L/kg × selected weight basis (ASHP 2020 default: actual BW)
+    const vdWeight = vdWeightBasis === 'ibw' ? ibw : vdWeightBasis === 'adjbw' ? dosingWeight : wtNum;
+    const vd = 0.7 * vdWeight;
 
     // Population ke estimate from CrCl — Matzke 1984 equation
     // Used for single-level AUC approximation (pop PK fallback)
@@ -75,7 +79,7 @@ export function VancoCalculator() {
     else               empInterval = 'per pharmacy / level-based';
 
     return { ibw, dosingWeight, crcl, vd, ke_pop, cl_pop, loadingDose, maintDose, empInterval, wtNum };
-  }, [age, wt, ht, scr, sex]);
+  }, [age, wt, ht, scr, sex, vdWeightBasis]);
 
   /* ── TDM / AUC calculations ─────────────────────────────────────── */
 
@@ -147,13 +151,37 @@ export function VancoCalculator() {
       }
     }
 
-    if (!currentAuc || currentAuc <= 0) return { currentAuc: null, patientVd, halfLife, adjMsg: null, samplingError };
+    if (!currentAuc || currentAuc <= 0) return { currentAuc: null, patientVd, halfLife, adjMsg: null, samplingError, predictedTrough: null, predictedTroughWarning: null, inRange: false };
 
     // WARN-5 fix: check if already in target range before recommending dose change
     const AUC_LOW = 400, AUC_HIGH = 600;
 
     if (targetParam === 'auc-500') {
+      // Predicted trough helper (single-level only, daily-dose proportion)
+      const desiredIntervalNum = parseInt(desiredInterval, 10);
+      const computePredictedTrough = (doseForPrediction: number, intervalForPrediction: number) => {
+        let predictedTrough: number | null = null;
+        let predictedTroughWarning: string | null = null;
+        if (tdmMethod === 'single' && cDoseNum > 0 && cIntervalNum > 0 && intervalForPrediction > 0) {
+          const troughSingleNum = parseFloat(troughSingle);
+          if (troughSingleNum > 0) {
+            // Daily dose ratio: (newDose × 24/newTau) / (currentDose × 24/currentTau)
+            const currentDaily = cDoseNum * (24 / cIntervalNum);
+            const newDaily = doseForPrediction * (24 / intervalForPrediction);
+            predictedTrough = troughSingleNum * (newDaily / currentDaily);
+            if (predictedTrough > 20) {
+              predictedTroughWarning = 'Predicted trough > 20 mg/L — increased nephrotoxicity risk.';
+            } else if (predictedTrough < 10) {
+              predictedTroughWarning = 'Predicted trough < 10 mg/L — potentially subtherapeutic.';
+            }
+          }
+        }
+        return { predictedTrough, predictedTroughWarning };
+      };
+
       if (currentAuc >= AUC_LOW && currentAuc <= AUC_HIGH) {
+        const desiredDoseNum = parseFloat(desiredDose);
+        const pred = desiredDoseNum > 0 ? computePredictedTrough(desiredDoseNum, desiredIntervalNum || cIntervalNum) : { predictedTrough: null, predictedTroughWarning: null };
         return {
           currentAuc,
           patientVd,
@@ -161,10 +189,14 @@ export function VancoCalculator() {
           samplingError,
           adjMsg: `AUC24 is within target range (${AUC_LOW}–${AUC_HIGH} mg·h/L). No dose change required.`,
           inRange: true,
+          ...pred,
         };
       }
       const ratio = 500 / currentAuc;
       const roundedNewDose = Math.min(Math.max(Math.round((cDoseNum * ratio) / 250) * 250, 250), 4500);
+      const desiredDoseNum = parseFloat(desiredDose);
+      const pred = computePredictedTrough(desiredDoseNum > 0 ? desiredDoseNum : roundedNewDose, desiredIntervalNum || cIntervalNum);
+
       let adjMsg: string;
       if (ratio > 2.0) {
         adjMsg = `${roundedNewDose} mg q${cIntervalNum}h — Caution: large increase (>2×). Consider increasing frequency (e.g., q${Math.max(8, cIntervalNum - 4)}h) rather than doubling dose.`;
@@ -173,12 +205,12 @@ export function VancoCalculator() {
       } else {
         adjMsg = `${roundedNewDose} mg IV q${cIntervalNum}h`;
       }
-      return { currentAuc, patientVd, halfLife, samplingError, adjMsg, inRange: false };
+      return { currentAuc, patientVd, halfLife, samplingError, adjMsg, inRange: false, ...pred };
     }
 
     // Trough-based targets (retained per CRIT-2 fix — but will show warning in UI)
     const relevantTrough = tdmMethod === 'single' ? parseFloat(troughSingle) : parseFloat(troughTwo);
-    if (!relevantTrough || relevantTrough <= 0) return { currentAuc, patientVd, halfLife, samplingError, adjMsg: null };
+    if (!relevantTrough || relevantTrough <= 0) return { currentAuc, patientVd, halfLife, samplingError, adjMsg: null, predictedTrough: null, predictedTroughWarning: null, inRange: false };
     const targetTrough = parseFloat(targetParam.split('-')[1]);
     const ratio = targetTrough / relevantTrough;
     const roundedNewDose = Math.min(Math.max(Math.round((cDoseNum * ratio) / 250) * 250, 250), 4500);
@@ -188,8 +220,8 @@ export function VancoCalculator() {
         ? `${roundedNewDose} mg q${cIntervalNum}h — Caution: large decrease.`
         : `${roundedNewDose} mg IV q${cIntervalNum}h`;
 
-    return { currentAuc, patientVd, halfLife, samplingError, adjMsg, inRange: false };
-  }, [cDose, cInterval, tdmMethod, troughSingle, peak, troughTwo, tInf, tToPeak, tBetween, targetParam, empiric]);
+    return { currentAuc, patientVd, halfLife, samplingError, adjMsg, inRange: false, predictedTrough: null, predictedTroughWarning: null };
+  }, [cDose, cInterval, tdmMethod, troughSingle, peak, troughTwo, tInf, tToPeak, tBetween, targetParam, empiric, desiredDose, desiredInterval]);
 
   /* ── Styles ─────────────────────────────────────────────────────── */
 
@@ -252,6 +284,29 @@ export function VancoCalculator() {
               <span className="text-slate-500 font-medium">Est. Vd</span>
               <span className="font-bold text-slate-800">{empiric.vd.toFixed(1)} L</span>
             </div>
+            <div className="flex items-center gap-2 text-xs border-b border-slate-200/60 pb-2">
+              <span className="text-slate-500 font-medium shrink-0">Vd Weight</span>
+              <div className="flex gap-1 bg-slate-100 p-0.5 rounded-lg ml-auto">
+                {([['abw', 'ABW'], ['ibw', 'IBW'], ['adjbw', 'AdjBW']] as const).map(([val, label]) => (
+                  <button
+                    key={val}
+                    onClick={() => setVdWeightBasis(val as 'abw' | 'ibw' | 'adjbw')}
+                    className={`px-2 py-0.5 text-[10px] font-bold rounded-md transition-all ${
+                      vdWeightBasis === val
+                        ? 'bg-white text-blue-600 shadow-sm'
+                        : 'text-slate-400 hover:text-slate-600'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {vdWeightBasis !== 'abw' && (
+              <p className="text-[10px] text-amber-600 -mt-1 pb-1">
+                ASHP 2020 recommends ABW for Vd. Using {vdWeightBasis === 'ibw' ? 'IBW' : 'AdjBW'} per institutional protocol.
+              </p>
+            )}
 
             {/* Loading dose — WARN-8 fix */}
             <div className="pt-1 pb-2 border-b border-slate-200/60">
@@ -323,7 +378,7 @@ export function VancoCalculator() {
             <div className="bg-amber-500/20 border border-amber-400/40 rounded-xl p-3 flex gap-2">
               <Info className="w-4 h-4 text-amber-300 shrink-0 mt-0.5" />
               <p className="text-[11px] text-amber-100 leading-snug">
-                Single-level AUC uses population PK (Matzke ke, 0.7 L/kg Vd). ASHP 2020 recommends Bayesian software for accuracy. Requires patient data from the empiric panel.
+                Single-level AUC uses population PK (Matzke ke, 0.7 L/kg {vdWeightBasis.toUpperCase()} Vd). ASHP 2020 recommends Bayesian software for accuracy. Requires patient data from the empiric panel.
               </p>
             </div>
           )}
@@ -421,6 +476,74 @@ export function VancoCalculator() {
                   {tdm?.adjMsg ?? 'Awaiting TDM data…'}
                 </div>
               </div>
+
+              {/* Predicted trough from custom dose & frequency — single-level only */}
+              {tdmMethod === 'single' && tdm?.currentAuc && tdm.currentAuc > 0 && !tdm?.samplingError && (
+                <div className="border-t border-slate-100 pt-3 mt-1 space-y-2">
+                  <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    Trough Prediction — Custom Dose & Frequency
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Dose (mg)</label>
+                      <input
+                        type="number"
+                        min={250}
+                        max={4500}
+                        step={250}
+                        value={desiredDose}
+                        onChange={e => setDesiredDose(e.target.value)}
+                        placeholder="e.g., 1500"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Frequency</label>
+                      <select
+                        value={desiredInterval}
+                        onChange={e => setDesiredInterval(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm font-medium text-slate-900 appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      >
+                        <option value="8">q8h</option>
+                        <option value="12">q12h</option>
+                        <option value="24">q24h</option>
+                        <option value="48">q48h</option>
+                      </select>
+                    </div>
+                  </div>
+                  {tdm?.predictedTrough != null && (
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-500 font-medium">Predicted Trough</span>
+                      <span className={`font-bold ${
+                        tdm.predictedTroughWarning
+                          ? ((tdm.predictedTrough ?? 0) > 20 ? 'text-red-600' : 'text-amber-600')
+                          : 'text-emerald-700'
+                      }`}>
+                        {tdm.predictedTrough.toFixed(1)} mg/L
+                      </span>
+                    </div>
+                  )}
+                  {tdm?.predictedTroughWarning && (
+                    <div className={`rounded-xl p-2.5 flex gap-2 ${
+                      (tdm.predictedTrough ?? 0) > 20
+                        ? 'bg-red-50 border border-red-200'
+                        : 'bg-amber-50 border border-amber-200'
+                    }`}>
+                      <AlertTriangle className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${
+                        (tdm.predictedTrough ?? 0) > 20 ? 'text-red-500' : 'text-amber-500'
+                      }`} />
+                      <p className={`text-[10px] leading-snug ${
+                        (tdm.predictedTrough ?? 0) > 20 ? 'text-red-700' : 'text-amber-700'
+                      }`}>
+                        {tdm.predictedTroughWarning}
+                      </p>
+                    </div>
+                  )}
+                  <p className="text-[10px] text-slate-400">
+                    Daily-dose proportion: predicted trough = measured trough × (new daily dose / current daily dose). Assumes steady-state linear PK.
+                  </p>
+                </div>
+              )}
             </>
           )}
         </div>
