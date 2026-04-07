@@ -11,7 +11,7 @@ async function fetchGeminiStream(body: string, maxRetries = 2): Promise<Response
   let lastResp: Response | null = null;
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?key=${GOOGLE_KEY}&alt=sse`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:streamGenerateContent?key=${GOOGLE_KEY}&alt=sse`,
       { method: 'POST', headers: { 'content-type': 'application/json' }, body }
     );
     if (resp.status !== 429) return resp;

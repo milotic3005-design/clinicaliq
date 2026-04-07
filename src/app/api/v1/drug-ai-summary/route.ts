@@ -35,7 +35,7 @@ async function summaryViaGemini(prompt: string, maxRetries = 2): Promise<{ text:
   let lastStatus = 0;
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GOOGLE_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${GOOGLE_KEY}`,
       {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
