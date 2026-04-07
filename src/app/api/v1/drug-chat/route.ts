@@ -1,16 +1,13 @@
 import { NextRequest } from 'next/server';
 
-const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
+const GOOGLE_KEY = process.env.GOOGLE_CSE_KEY;
 
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-}
+interface Message { role: 'user' | 'assistant'; content: string; }
 
 export async function POST(req: NextRequest) {
-  if (!ANTHROPIC_KEY) {
+  if (!GOOGLE_KEY) {
     return new Response(
-      JSON.stringify({ error: 'AI features require an ANTHROPIC_API_KEY environment variable.' }),
+      JSON.stringify({ error: 'AI features require a GOOGLE_CSE_KEY environment variable.' }),
       { status: 503, headers: { 'content-type': 'application/json' } }
     );
   }
@@ -30,40 +27,83 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  const systemPrompt = [
+  const systemText = [
     `You are an expert clinical pharmacist AI assistant specializing in ${drug}.`,
     `Answer questions accurately using evidence-based clinical data from FDA package inserts, clinical guidelines, and pharmacology references.`,
-    `Be concise and clinically precise. Use bullet points for lists. Always note when information is dose- or patient-specific.`,
+    `Be concise and clinically precise. Use bullet points for lists.`,
     `End every response with: "⚕️ Always verify with a licensed pharmacist or prescriber for patient-specific decisions."`,
     context ? `\nContext from search results about ${drug}:\n${context.slice(0, 3000)}` : '',
   ].filter(Boolean).join('\n');
 
-  try {
-    const anthropicResp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': ANTHROPIC_KEY,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1500,
-        stream: true,
-        system: systemPrompt,
-        messages: messages.slice(-20).map((m) => ({ role: m.role, content: m.content })),
-      }),
-    });
+  // Convert messages to Gemini format (role: "user" | "model")
+  const geminiContents = messages.slice(-20).map((m) => ({
+    role: m.role === 'assistant' ? 'model' : 'user',
+    parts: [{ text: m.content }],
+  }));
 
-    if (!anthropicResp.ok) {
-      const errText = await anthropicResp.text();
-      return new Response(JSON.stringify({ error: `Anthropic error ${anthropicResp.status}`, detail: errText }), {
+  try {
+    const geminiResp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?key=${GOOGLE_KEY}&alt=sse`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: systemText }] },
+          contents: geminiContents,
+          generationConfig: { maxOutputTokens: 1500, temperature: 0.3 },
+        }),
+      }
+    );
+
+    if (!geminiResp.ok) {
+      const errText = await geminiResp.text();
+      return new Response(JSON.stringify({ error: `Gemini error ${geminiResp.status}`, detail: errText }), {
         status: 502, headers: { 'content-type': 'application/json' },
       });
     }
 
-    // Stream Anthropic SSE → client
-    return new Response(anthropicResp.body, {
+    // Normalize Gemini SSE → Anthropic-compatible SSE so the client parser is unchanged
+    const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>();
+    const writer = writable.getWriter();
+    const encoder = new TextEncoder();
+    const decoder = new TextDecoder();
+
+    (async () => {
+      const reader = geminiResp.body!.getReader();
+      let buffer = '';
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() ?? '';
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            const raw = line.slice(6).trim();
+            if (!raw || raw === '[DONE]') continue;
+            try {
+              const parsed = JSON.parse(raw) as {
+                candidates?: { content?: { parts?: { text?: string }[] } }[];
+              };
+              const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+              if (text) {
+                // Emit in Anthropic content_block_delta format (client already parses this)
+                const out = JSON.stringify({
+                  type: 'content_block_delta',
+                  delta: { type: 'text_delta', text },
+                });
+                await writer.write(encoder.encode(`data: ${out}\n\n`));
+              }
+            } catch { /* skip malformed line */ }
+          }
+        }
+      } finally {
+        await writer.close();
+      }
+    })();
+
+    return new Response(readable, {
       headers: {
         'content-type': 'text/event-stream',
         'cache-control': 'no-cache, no-transform',

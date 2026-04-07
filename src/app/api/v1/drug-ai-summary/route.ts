@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
+const GOOGLE_KEY = process.env.GOOGLE_CSE_KEY;
 
 export interface DrugSummary {
   indication: string;
@@ -17,9 +17,9 @@ export interface DrugSummary {
 }
 
 export async function POST(req: NextRequest) {
-  if (!ANTHROPIC_KEY) {
+  if (!GOOGLE_KEY) {
     return NextResponse.json(
-      { error: 'AI features require an ANTHROPIC_API_KEY environment variable. Add it in your Vercel project settings.' },
+      { error: 'AI features require a GOOGLE_CSE_KEY environment variable.' },
       { status: 503 }
     );
   }
@@ -58,39 +58,40 @@ Return ONLY valid JSON — no markdown fences, no prose — in this exact struct
 }`;
 
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': ANTHROPIC_KEY,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1500,
-        messages: [{ role: 'user', content: prompt }],
-      }),
-      signal: AbortSignal.timeout(30000),
-    });
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GOOGLE_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: 1500, temperature: 0.2 },
+        }),
+        signal: AbortSignal.timeout(30000),
+      }
+    );
 
     if (!resp.ok) {
       const err = await resp.text();
-      return NextResponse.json({ error: `Anthropic API error: ${resp.status}`, detail: err }, { status: 502 });
+      return NextResponse.json({ error: `Gemini API error: ${resp.status}`, detail: err }, { status: 502 });
     }
 
-    const data = await resp.json();
-    const text: string = data.content?.[0]?.text ?? '';
+    const data = await resp.json() as {
+      candidates?: { content?: { parts?: { text?: string }[] } }[];
+    };
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+
+    // Strip markdown fences if present
+    const stripped = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
 
     try {
-      const parsed = JSON.parse(text) as DrugSummary;
+      const parsed = JSON.parse(stripped) as DrugSummary;
       return NextResponse.json({ drug, summary: parsed });
     } catch {
-      // Try to extract JSON from the text
-      const match = text.match(/\{[\s\S]*\}/);
+      const match = stripped.match(/\{[\s\S]*\}/);
       if (match) {
         try {
-          const parsed = JSON.parse(match[0]) as DrugSummary;
-          return NextResponse.json({ drug, summary: parsed });
+          return NextResponse.json({ drug, summary: JSON.parse(match[0]) as DrugSummary });
         } catch { /* fall through */ }
       }
       return NextResponse.json({ drug, summary: null, raw: text });
