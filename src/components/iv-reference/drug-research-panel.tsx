@@ -116,7 +116,7 @@ export function DrugResearchPanel({ isOpen, onClose }: Props) {
   const [searching, setSearching] = useState(false);
   const [results, setResults] = useState<DrugSearchResult[]>([]);
   const [searchedDrug, setSearchedDrug] = useState('');
-  const [googleEnabled, setGoogleEnabled] = useState(false);
+  const [googleEnabled, setGoogleEnabled] = useState<boolean | null>(null); // null = unknown (no search yet)
   const [searchError, setSearchError] = useState('');
 
   const [summaryOpen, setSummaryOpen] = useState(false);
@@ -359,7 +359,7 @@ export function DrugResearchPanel({ isOpen, onClose }: Props) {
             </button>
           </div>
 
-          {!googleEnabled && !searching && !searchError && results.length === 0 && (
+          {googleEnabled === false && !searching && !searchError && results.length === 0 && (
             <div className="flex gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800">
               <AlertTriangle size={14} className="shrink-0 mt-0.5 text-amber-600" />
               <span>
