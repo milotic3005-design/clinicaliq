@@ -1,7 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import { Activity, FlaskConical, Calculator, TestTubes, Home, Shield, Pill, Baby, Stethoscope } from 'lucide-react';
+import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react';
+import {
+  Activity01Icon,
+  Calculator01Icon,
+  TestTubesIcon,
+  Shield01Icon,
+  PillIcon,
+  Baby01Icon,
+  AiBrain01Icon,
+  Home01Icon,
+  InjectionIcon,
+} from '@hugeicons/core-free-icons';
 import { DrugInteractionChecker } from '@/components/tools/drug-interaction-checker';
 import { ClinicalScores } from '@/components/tools/clinical-scores';
 import { LabReference } from '@/components/tools/lab-reference';
@@ -12,144 +23,103 @@ import { DifferentialDiagnosis } from '@/components/tools/differential-diagnosis
 
 type ToolTab = 'interactions' | 'scores' | 'labs' | 'spectrum' | 'dosing' | 'pregnancy' | 'ddx';
 
-const TABS: { id: ToolTab; label: string; icon: typeof FlaskConical; desc: string }[] = [
-  { id: 'interactions', label: 'Drug Interactions', icon: FlaskConical, desc: 'Check drug-drug interactions via NLM RxNorm' },
-  { id: 'scores', label: 'Clinical Scores', icon: Calculator, desc: 'CURB-65, qSOFA, SOFA, CHA₂DS₂-VASc, Wells, Child-Pugh, MELD' },
-  { id: 'labs', label: 'Lab Reference', icon: TestTubes, desc: 'Normal ranges, critical values, and clinical notes' },
-  { id: 'spectrum', label: 'Antibiotic Spectrum', icon: Shield, desc: 'Antimicrobial coverage grid — Gram+, Gram−, anaerobes, atypicals, Pseudomonas, MRSA, ESBL' },
-  { id: 'dosing', label: 'Dose Adjustments', icon: Pill, desc: 'Renal & hepatic dose adjustments for commonly used medications' },
-  { id: 'pregnancy', label: 'Pregnancy & Lactation', icon: Baby, desc: 'Drug safety in pregnancy & breastfeeding with NIH LactMed integration' },
-  { id: 'ddx', label: 'Differential Dx', icon: Stethoscope, desc: 'Symptom-based differential diagnosis helper for common ED & primary care presentations' },
+const TABS: { id: ToolTab; label: string; icon: IconSvgElement; desc: string }[] = [
+  { id: 'interactions', label: 'Drug Interactions', icon: Activity01Icon, desc: 'Check drug-drug interactions via NLM RxNorm' },
+  { id: 'scores',       label: 'Clinical Scores',   icon: Calculator01Icon, desc: 'CURB-65, qSOFA, SOFA, CHA₂DS₂-VASc, Wells, Child-Pugh, MELD' },
+  { id: 'labs',         label: 'Lab Reference',      icon: TestTubesIcon,    desc: 'Normal ranges, critical values, and clinical notes' },
+  { id: 'spectrum',     label: 'Antibiotic Spectrum', icon: Shield01Icon,    desc: 'Antimicrobial coverage grid — Gram+, Gram−, anaerobes, Pseudomonas, MRSA, ESBL' },
+  { id: 'dosing',       label: 'Dose Adjustments',   icon: PillIcon,         desc: 'Renal & hepatic dose adjustments for commonly used medications' },
+  { id: 'pregnancy',    label: 'Pregnancy & Lactation', icon: Baby01Icon,    desc: 'Drug safety in pregnancy & breastfeeding with NIH LactMed integration' },
+  { id: 'ddx',          label: 'Differential Dx',    icon: AiBrain01Icon,    desc: 'Symptom-based differential diagnosis helper for common ED & primary care presentations' },
 ];
 
 export default function ToolsPage() {
   const [activeTab, setActiveTab] = useState<ToolTab>('interactions');
+  const activeTabData = TABS.find(t => t.id === activeTab)!;
 
   return (
-    <div className="min-h-screen" style={{ background: '#f8fafc' }}>
+    <div className="min-h-screen" style={{ background: '#f4f6fb' }}>
+
       {/* Header */}
-      <header
-        className="sticky top-0 z-40"
-        style={{ background: '#ffffff', borderBottom: '1px solid #e0e2e6' }}
-      >
+      <header className="sticky top-0 z-40" style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid #e8eaf0' }}>
         <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
-          <a
-            href="/"
-            className="text-base font-semibold shrink-0"
-            style={{ color: '#181d26', letterSpacing: '0.08px' }}
-          >
+          <a href="/" className="text-base font-extrabold shrink-0" style={{ color: '#0f172a', letterSpacing: '-0.2px', textDecoration: 'none', fontFamily: 'var(--font-display)' }}>
             Clinical<span style={{ color: '#1b61c9' }}>IQ</span>
           </a>
           <div className="flex items-center gap-1">
-            <a
-              href="/"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-xl transition-colors"
-              style={{ color: 'rgba(4,14,32,0.69)', letterSpacing: '0.08px' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#1b61c9'; (e.currentTarget as HTMLElement).style.background = '#f8fafc'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(4,14,32,0.69)'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-            >
-              <Home className="w-4 h-4" />
-              Search
-            </a>
-            <a
-              href="/iv-reference"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-xl transition-colors"
-              style={{ color: 'rgba(4,14,32,0.69)', letterSpacing: '0.08px' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#1b61c9'; (e.currentTarget as HTMLElement).style.background = '#f8fafc'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'rgba(4,14,32,0.69)'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-            >
-              <Activity className="w-4 h-4" />
-              IV Reference
-            </a>
+            {[
+              { href: '/',            icon: Home01Icon,    label: 'Home' },
+              { href: '/iv-reference', icon: InjectionIcon, label: 'IV Reference' },
+            ].map(({ href, icon, label }) => (
+              <a key={href} href={href}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all"
+                style={{ color: 'rgba(15,23,42,0.6)', textDecoration: 'none' }}
+                onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.color = '#1b61c9'; el.style.background = '#f0f4ff'; }}
+                onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.color = 'rgba(15,23,42,0.6)'; el.style.background = 'transparent'; }}
+              >
+                <HugeiconsIcon icon={icon} size={15} color="currentColor" />
+                {label}
+              </a>
+            ))}
           </div>
         </div>
       </header>
 
       <div className="max-w-5xl mx-auto px-4 md:px-6 py-8">
+
         {/* Title */}
-        <div className="mb-6">
-          <h1
-            className="text-2xl font-bold mb-1"
-            style={{ color: '#181d26', letterSpacing: '-0.2px' }}
-          >
+        <div className="mb-7">
+          <h1 className="text-2xl font-extrabold mb-1.5" style={{ color: '#0f172a', letterSpacing: '-0.4px', fontFamily: 'var(--font-display)' }}>
             Clinical Tools
           </h1>
-          <p
-            className="text-sm font-medium"
-            style={{ color: 'rgba(4,14,32,0.69)', letterSpacing: '0.07px' }}
-          >
+          <p className="text-sm" style={{ color: 'rgba(15,23,42,0.58)' }}>
             Point-of-care calculators, interaction checks, and lab references.
           </p>
         </div>
 
         {/* Tab navigation */}
-        <div
-          className="flex gap-2 mb-6 overflow-x-auto pb-1"
-        >
+        <div className="flex gap-2 mb-2 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
           {TABS.map(tab => {
-            const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all shrink-0"
+              <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold shrink-0 transition-all"
                 style={isActive ? {
                   background: '#1b61c9',
                   color: '#ffffff',
-                  letterSpacing: '0.08px',
-                  boxShadow: 'rgba(0,0,0,0.32) 0px 0px 1px, rgba(0,0,0,0.08) 0px 0px 2px, rgba(45,127,249,0.28) 0px 1px 3px',
+                  boxShadow: '0 2px 8px rgba(27,97,201,0.35), 0 0 0 1px rgba(27,97,201,0.2)',
+                  fontFamily: 'var(--font-display)',
                 } : {
                   background: '#ffffff',
-                  color: '#181d26',
-                  border: '1px solid #e0e2e6',
-                  letterSpacing: '0.08px',
-                  boxShadow: 'rgba(15,48,106,0.05) 0px 0px 20px',
+                  color: 'rgba(15,23,42,0.7)',
+                  border: '1px solid #e8eaf0',
+                  boxShadow: '0 1px 3px rgba(15,23,42,0.05)',
+                  fontFamily: 'var(--font-display)',
                 }}
-                onMouseEnter={e => {
-                  if (!isActive) {
-                    (e.currentTarget as HTMLElement).style.borderColor = '#1b61c9';
-                    (e.currentTarget as HTMLElement).style.color = '#1b61c9';
-                  }
-                }}
-                onMouseLeave={e => {
-                  if (!isActive) {
-                    (e.currentTarget as HTMLElement).style.borderColor = '#e0e2e6';
-                    (e.currentTarget as HTMLElement).style.color = '#181d26';
-                  }
-                }}
+                onMouseEnter={e => { if (!isActive) { const el = e.currentTarget as HTMLElement; el.style.borderColor = '#1b61c9'; el.style.color = '#1b61c9'; el.style.background = '#f0f4ff'; } }}
+                onMouseLeave={e => { if (!isActive) { const el = e.currentTarget as HTMLElement; el.style.borderColor = '#e8eaf0'; el.style.color = 'rgba(15,23,42,0.7)'; el.style.background = '#ffffff'; } }}
               >
-                <Icon className="w-4 h-4" />
+                <HugeiconsIcon icon={tab.icon} size={15} color="currentColor" />
                 {tab.label}
               </button>
             );
           })}
         </div>
 
-        {/* Description */}
-        <p
-          className="text-sm font-medium mb-5"
-          style={{ color: 'rgba(4,14,32,0.69)', letterSpacing: '0.07px' }}
-        >
-          {TABS.find(t => t.id === activeTab)?.desc}
+        {/* Active tab description */}
+        <p className="text-sm mb-5" style={{ color: 'rgba(15,23,42,0.55)', paddingLeft: '2px' }}>
+          {activeTabData.desc}
         </p>
 
         {/* Content */}
-        <div
-          className="rounded-2xl p-6"
-          style={{
-            background: '#ffffff',
-            border: '1px solid #e0e2e6',
-            boxShadow: 'rgba(15,48,106,0.05) 0px 0px 20px',
-          }}
-        >
+        <div className="rounded-2xl p-6" style={{ background: '#ffffff', border: '1px solid #e8eaf0', boxShadow: '0 1px 8px rgba(15,23,42,0.05), 0 0 0 1px rgba(15,23,42,0.02)' }}>
           {activeTab === 'interactions' && <DrugInteractionChecker />}
-          {activeTab === 'scores' && <ClinicalScores />}
-          {activeTab === 'labs' && <LabReference />}
-          {activeTab === 'spectrum' && <AntimicrobialSpectrum />}
-          {activeTab === 'dosing' && <DoseAdjustments />}
-          {activeTab === 'pregnancy' && <PregnancyLactation />}
-          {activeTab === 'ddx' && <DifferentialDiagnosis />}
+          {activeTab === 'scores'       && <ClinicalScores />}
+          {activeTab === 'labs'         && <LabReference />}
+          {activeTab === 'spectrum'     && <AntimicrobialSpectrum />}
+          {activeTab === 'dosing'       && <DoseAdjustments />}
+          {activeTab === 'pregnancy'    && <PregnancyLactation />}
+          {activeTab === 'ddx'          && <DifferentialDiagnosis />}
         </div>
       </div>
     </div>
