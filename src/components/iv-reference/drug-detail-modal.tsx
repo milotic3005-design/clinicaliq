@@ -107,7 +107,7 @@ export function DrugDetailModal({ drug, onClose }: { drug: Drug; onClose: () => 
                 {drug.brandName} · {drug.drugClass}
               </p>
             </div>
-            <button onClick={onClose} className="bg-slate-100 hover:bg-slate-200 text-slate-500 p-2 rounded-full transition-colors flex-shrink-0">
+            <button onClick={onClose} className="bg-slate-100 hover:bg-slate-200 text-slate-500 p-2 rounded-full transition-colors flex-shrink-0" aria-label="Close details">
               <X className="w-4 h-4" />
             </button>
           </div>
