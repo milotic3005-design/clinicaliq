@@ -1,0 +1,3 @@
+## 2024-05-18 - [In-memory Cache Key Generation]
+**Learning:** Avoid using expensive, asynchronous WebCrypto digest operations (e.g., SHA-256) for generating keys for simple in-memory Map caches, especially when the input strings are relatively short (like search queries). The async overhead and event loop allocations outweigh any hash uniformity benefits, acting as a performance bottleneck.
+**Action:** Use simple string normalization (e.g., lowercasing and trimming) for in-memory cache keys, which can be done synchronously and efficiently.
