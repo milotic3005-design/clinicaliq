@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { ChevronDown, ChevronRight, AlertTriangle, Search } from 'lucide-react';
 import type { FDALabelSummary, SourcedField } from '@/lib/types';
 import { CitationFooter } from '@/components/citation-footer';
@@ -160,29 +160,23 @@ function Section({
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [showAll, setShowAll] = useState(false);
 
+  const bullets = useMemo(() => field ? parseIntoBullets(field.value) : [], [field]);
+
+  const isSearching = searchQuery.length >= 2;
+
+  const visibleBullets = useMemo(() => {
+    if (isSearching) {
+      const q = searchQuery.toLowerCase();
+      return bullets.filter(b =>
+        b.text.toLowerCase().includes(q) || b.heading?.toLowerCase().includes(q)
+      );
+    }
+    return showAll ? bullets : bullets.slice(0, INITIAL_BULLET_LIMIT);
+  }, [bullets, isSearching, searchQuery, showAll]);
+
   if (!field) return null;
 
-  const bullets = parseIntoBullets(field.value);
-
-  // If searching, check if any content matches
-  const isSearching = searchQuery.length >= 2;
-  if (isSearching) {
-    const q = searchQuery.toLowerCase();
-    const matches = bullets.some(
-      b => b.text.toLowerCase().includes(q) || b.heading?.toLowerCase().includes(q)
-    );
-    if (!matches) return null;
-  }
-
-  // Filter bullets if searching
-  const visibleBullets = isSearching
-    ? bullets.filter(b => {
-        const q = searchQuery.toLowerCase();
-        return b.text.toLowerCase().includes(q) || b.heading?.toLowerCase().includes(q);
-      })
-    : showAll
-      ? bullets
-      : bullets.slice(0, INITIAL_BULLET_LIMIT);
+  if (isSearching && visibleBullets.length === 0) return null;
 
   const hasMore = !isSearching && bullets.length > INITIAL_BULLET_LIMIT;
 
@@ -255,6 +249,11 @@ export function FDALabelTab({ data }: FDALabelTabProps) {
   const sourceUrl = `https://api.fda.gov/drug/label.json?search=set_id:${data.openfda_id}`;
   const retrievedAt = data.indications_and_usage?.retrieved_at || new Date().toISOString();
 
+  const boxedWarningBullets = useMemo(() =>
+    data.boxed_warning ? parseIntoBullets(data.boxed_warning.value) : [],
+    [data.boxed_warning]
+  );
+
   return (
     <div className="space-y-3">
       {/* Header */}
@@ -289,7 +288,7 @@ export function FDALabelTab({ data }: FDALabelTabProps) {
             <span className="text-sm font-bold text-red-700">BLACK BOX WARNING</span>
           </div>
           <ul className="space-y-1.5">
-            {parseIntoBullets(data.boxed_warning.value).map((item, i) => (
+            {boxedWarningBullets.map((item, i) => (
               <li key={i} className="flex gap-2 text-sm text-red-900 leading-relaxed">
                 <span className="text-red-400 mt-1 shrink-0 text-xs">●</span>
                 <span><HighlightText text={item.text} query={searchQuery} /></span>
