@@ -1,0 +1,3 @@
+## 2023-10-27 - Accessible Clear Button for Search Input
+**Learning:** Adding a clear button to an input field provides a great UX improvement, but it must be accessible. Key accessibility considerations include: adding an `aria-label` since the button only contains an icon; ensuring it has clear focus styles (`focus-visible:ring-2`) for keyboard users; and programmatic focus management (calling `.focus()` on the input ref after clearing) so users can immediately begin typing their new query without having to manually re-focus the input.
+**Action:** When adding icon-only action buttons (like a clear button) inside inputs or forms, always include an `aria-label`, visible focus styles, and manage focus state correctly after the action is performed.
