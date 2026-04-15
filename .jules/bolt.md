@@ -1,0 +1,3 @@
+## 2025-02-20 - Expensive String Parsing in Render Causes Input Lag
+**Learning:** Found a performance bottleneck where complex regular expressions and string manipulation (`parseIntoBullets`) were being executed on every render cycle (during search input keystrokes) in the `FDALabelTab` component. This caused main-thread blocking and noticeable input lag when searching within large text blobs (like FDA labels).
+**Action:** Always wrap computationally expensive parsing logic with `useMemo` when working inside components that re-render frequently (e.g., those containing controlled inputs or search states) to ensure the parsing only runs when the source text actually changes.
