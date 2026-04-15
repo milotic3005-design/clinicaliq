@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { ChevronDown, ChevronRight, AlertTriangle, Search } from 'lucide-react';
 import type { FDALabelSummary, SourcedField } from '@/lib/types';
 import { CitationFooter } from '@/components/citation-footer';
@@ -160,9 +160,12 @@ function Section({
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [showAll, setShowAll] = useState(false);
 
-  if (!field) return null;
+  // Memoize expensive parsing operation to prevent lag during search typing
+  const bullets = useMemo(() => {
+    return field ? parseIntoBullets(field.value) : [];
+  }, [field]);
 
-  const bullets = parseIntoBullets(field.value);
+  if (!field) return null;
 
   // If searching, check if any content matches
   const isSearching = searchQuery.length >= 2;
@@ -255,6 +258,11 @@ export function FDALabelTab({ data }: FDALabelTabProps) {
   const sourceUrl = `https://api.fda.gov/drug/label.json?search=set_id:${data.openfda_id}`;
   const retrievedAt = data.indications_and_usage?.retrieved_at || new Date().toISOString();
 
+  // Memoize boxed warning bullets as well
+  const boxedWarningBullets = useMemo(() => {
+    return data.boxed_warning ? parseIntoBullets(data.boxed_warning.value) : [];
+  }, [data.boxed_warning]);
+
   return (
     <div className="space-y-3">
       {/* Header */}
@@ -289,7 +297,7 @@ export function FDALabelTab({ data }: FDALabelTabProps) {
             <span className="text-sm font-bold text-red-700">BLACK BOX WARNING</span>
           </div>
           <ul className="space-y-1.5">
-            {parseIntoBullets(data.boxed_warning.value).map((item, i) => (
+            {boxedWarningBullets.map((item, i) => (
               <li key={i} className="flex gap-2 text-sm text-red-900 leading-relaxed">
                 <span className="text-red-400 mt-1 shrink-0 text-xs">●</span>
                 <span><HighlightText text={item.text} query={searchQuery} /></span>
