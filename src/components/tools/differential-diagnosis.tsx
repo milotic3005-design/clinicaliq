@@ -94,15 +94,30 @@ export function DifferentialDiagnosis() {
     setExpandedDx(null);
   };
 
-  const filteredGroups = GROUPED_SYMPTOMS.map(g => ({
-    ...g,
-    symptoms: g.symptoms.filter(s =>
-      !searchQuery || s.name.toLowerCase().includes(searchQuery.toLowerCase())
-    ),
-  })).filter(g => g.symptoms.length > 0);
+  // ⚡ Bolt: Memoize filtered groups to prevent O(N) recalculation on every render
+  // (especially when just toggling accordion expansion or selecting a symptom).
+  // Also pre-computes the lowercase query once rather than inside the filter loop.
+  const filteredGroups = useMemo(() => {
+    const query = searchQuery.toLowerCase();
+    return GROUPED_SYMPTOMS.map(g => ({
+      ...g,
+      symptoms: g.symptoms.filter(s => !query || s.name.toLowerCase().includes(query)),
+    })).filter(g => g.symptoms.length > 0);
+  }, [searchQuery]);
 
-  const selectedCount = (system: BodySystem) =>
-    SYMPTOMS.filter(s => s.bodySystem === system && selected.has(s.id)).length;
+  // ⚡ Bolt: Replaces O(N^2) render-time filtering with a single O(N) pass.
+  // Previously `selectedCount(system)` filtered the entire SYMPTOMS array (O(N))
+  // for *each* of the 8 body systems during render. Now pre-computes to a hash map.
+  const systemCounts = useMemo(() => {
+    const counts = {} as Record<BodySystem, number>;
+    for (const sys of GROUPED_SYMPTOMS) counts[sys.system] = 0;
+    SYMPTOMS.forEach(s => {
+      if (selected.has(s.id)) {
+        counts[s.bodySystem] = (counts[s.bodySystem] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [selected]);
 
   return (
     <div className="space-y-4">
@@ -166,7 +181,7 @@ export function DifferentialDiagnosis() {
             {filteredGroups.map(({ system, symptoms }) => {
               const meta = BODY_SYSTEM_LABELS[system];
               const isOpen = expandedSystems.has(system);
-              const count = selectedCount(system);
+              const count = systemCounts[system] || 0;
               return (
                 <div key={system} className="border border-slate-100 rounded-xl overflow-hidden">
                   <button
