@@ -165,7 +165,7 @@ export function DrugInteractionChecker() {
               )}
             </div>
             {drugs.length > 2 && (
-              <button onClick={() => removeDrug(i)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+              <button onClick={() => removeDrug(i)} aria-label="Remove drug" className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400">
                 <X className="w-4 h-4" />
               </button>
             )}
