@@ -1,0 +1,3 @@
+## 2026-04-17 - O(N^2) Render-Time Filtering
+**Learning:** React components that render lists derived from other large lists can easily slip into O(N^2) complexity if filtering happens inside a map or reduce function on every render. In this app's differential diagnosis tool, an O(N) array filter was being called inside a map function for 8 different body systems on every render, causing sluggishness when expanding/collapsing accordions.
+**Action:** When deriving counts or subset lists from a main dataset based on a selected set, pre-compute a hash map (O(N) single pass) and memoize it with `useMemo` rather than relying on inline `.filter()` calls. Always add comments explaining the Big-O improvement.
