@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDebounce } from '@/hooks/use-debounce';
 import { Input } from '@/components/ui/input';
@@ -37,7 +37,7 @@ const SOURCE_META: Record<string, { badge: string; badgeColor: string; icon: Rea
 };
 
 /** Bolds the part of `label` that starts with `query` (case-insensitive prefix match) */
-function HighlightMatch({ label, query }: { label: string; query: string }) {
+const HighlightMatch = memo(function HighlightMatch({ label, query }: { label: string; query: string }) {
   if (!query) return <span>{label}</span>;
   const idx = label.toLowerCase().indexOf(query.toLowerCase());
   if (idx === -1) return <span>{label}</span>;
@@ -48,7 +48,7 @@ function HighlightMatch({ label, query }: { label: string; query: string }) {
       {label.slice(idx + query.length)}
     </span>
   );
-}
+});
 
 export function SearchBar({ initialQuery = '', autoFocus = false, compact = false }: SearchBarProps) {
   const router = useRouter();
@@ -59,6 +59,7 @@ export function SearchBar({ initialQuery = '', autoFocus = false, compact = fals
   const [isLoading, setIsLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const cacheRef = useRef<Record<string, Suggestion[]>>({});
   const debouncedQuery = useDebounce(query, 220); // faster for perceived snappiness
 
   useEffect(() => {
@@ -69,20 +70,36 @@ export function SearchBar({ initialQuery = '', autoFocus = false, compact = fals
       return;
     }
 
+    const cached = cacheRef.current[debouncedQuery];
+    if (cached) {
+      setSuggestions(cached);
+      setShowSuggestions(true);
+      setSelectedIndex(-1);
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     const controller = new AbortController();
 
+    // ⚡ Bolt: Cache search suggestion requests to prevent duplicate network calls on backspace/re-type
     fetch(`/api/v1/suggest?q=${encodeURIComponent(debouncedQuery)}&limit=8`, {
       signal: controller.signal,
     })
       .then(res => res.json())
       .then(data => {
-        setSuggestions(data.suggestions || []);
+        const results = data.suggestions || [];
+        cacheRef.current[debouncedQuery] = results;
+        setSuggestions(results);
         setShowSuggestions(true);
         setSelectedIndex(-1);
         setIsLoading(false);
       })
-      .catch(() => { setIsLoading(false); });
+      .catch((e) => {
+        if (e.name !== 'AbortError') {
+          setIsLoading(false);
+        }
+      });
 
     return () => controller.abort();
   }, [debouncedQuery]);
