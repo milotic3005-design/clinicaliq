@@ -59,12 +59,25 @@ export function SearchBar({ initialQuery = '', autoFocus = false, compact = fals
   const [isLoading, setIsLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const cacheRef = useRef<Record<string, Suggestion[]>>({});
   const debouncedQuery = useDebounce(query, 220); // faster for perceived snappiness
 
   useEffect(() => {
+    let active = true;
+
     if (debouncedQuery.length < 2) {
       setSuggestions([]);
       setShowSuggestions(false);
+      setIsLoading(false);
+      return;
+    }
+
+    // Check frontend cache first to avoid redundant network requests
+    const cached = cacheRef.current[debouncedQuery];
+    if (cached) {
+      setSuggestions(cached);
+      setShowSuggestions(true);
+      setSelectedIndex(-1);
       setIsLoading(false);
       return;
     }
@@ -77,14 +90,25 @@ export function SearchBar({ initialQuery = '', autoFocus = false, compact = fals
     })
       .then(res => res.json())
       .then(data => {
-        setSuggestions(data.suggestions || []);
+        if (!active) return;
+        const fetchedSuggestions = data.suggestions || [];
+        cacheRef.current[debouncedQuery] = fetchedSuggestions;
+        setSuggestions(fetchedSuggestions);
         setShowSuggestions(true);
         setSelectedIndex(-1);
         setIsLoading(false);
       })
-      .catch(() => { setIsLoading(false); });
+      .catch((err) => {
+        if (!active) return;
+        if (err.name !== 'AbortError') {
+          setIsLoading(false);
+        }
+      });
 
-    return () => controller.abort();
+    return () => {
+      active = false;
+      controller.abort();
+    };
   }, [debouncedQuery]);
 
   useEffect(() => {
