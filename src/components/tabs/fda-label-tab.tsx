@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { ChevronDown, ChevronRight, AlertTriangle, Search } from 'lucide-react';
 import type { FDALabelSummary, SourcedField } from '@/lib/types';
 import { CitationFooter } from '@/components/citation-footer';
@@ -160,9 +160,13 @@ function Section({
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [showAll, setShowAll] = useState(false);
 
-  if (!field) return null;
+  // Memoize bullets parsing so we don't re-parse on every search keystroke
+  const bullets = useMemo(() => {
+    if (!field) return [];
+    return parseIntoBullets(field.value);
+  }, [field]);
 
-  const bullets = parseIntoBullets(field.value);
+  if (!field) return null;
 
   // If searching, check if any content matches
   const isSearching = searchQuery.length >= 2;

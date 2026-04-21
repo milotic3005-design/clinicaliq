@@ -1,0 +1,3 @@
+## 2024-05-19 - [FDA Label Tab Keystroke Bottleneck]
+**Learning:** Found a component (`FDALabelTab`) that re-renders completely on every search keystroke, causing expensive regex parsing (`parseIntoBullets`) to run repeatedly on the large FDA label data. Wrapping this with `useMemo` avoids redundant string manipulations on each keystroke but required carefully placing the hook above the early return to respect React Rules of Hooks.
+**Action:** Look for search inputs triggering frequent re-renders in components containing computationally heavy string parsing or filtering operations, and aggressively memoize the expensive calculations, being careful with hook placement around early returns.
