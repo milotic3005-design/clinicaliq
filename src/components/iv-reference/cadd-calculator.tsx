@@ -89,7 +89,7 @@ export function CaddModal({ isOpen, onClose, drugDb }: { isOpen: boolean; onClos
             </h2>
             <p className="text-base font-semibold text-slate-500 mt-2">Continuous Ambulatory Delivery Device compounding calculator</p>
           </div>
-          <button onClick={onClose} className="bg-slate-100 hover:bg-slate-200 text-slate-500 p-2.5 rounded-full transition-colors flex-shrink-0"><X className="w-5 h-5" /></button>
+          <button onClick={onClose} className="bg-slate-100 hover:bg-slate-200 text-slate-500 p-2.5 rounded-full transition-colors flex-shrink-0" aria-label="Close CADD Bag Calculator" title="Close"><X className="w-5 h-5" /></button>
         </div>
 
         <div className="p-6 md:p-8 overflow-y-auto flex-1 bg-sky-50/50 flex flex-col lg:flex-row gap-8">
