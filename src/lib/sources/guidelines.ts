@@ -240,7 +240,7 @@ export async function fetchGuidelines(query: string): Promise<GuidelinesSummary 
   const lower = query.toLowerCase().trim();
 
   // Find curated guidelines by matching keywords
-  let curated: GuidelineLink[] = [];
+  const curated: GuidelineLink[] = [];
   for (const [keyword, links] of Object.entries(CURATED_GUIDELINES)) {
     if (lower.includes(keyword) || keyword.includes(lower)) {
       // Deduplicate by URL

@@ -1,0 +1,3 @@
+## 2024-04-22 - [O(1) Hash Maps and Memoization for Large Collections]
+**Learning:** Found multiple O(N^2) patterns in a client-side component, where filtering operations over a large array triggered nested `Array.find` or redundant string `.toLowerCase()` conversions during render. This severely degraded UI responsiveness on search or selection actions.
+**Action:** Lift static array lookups into an O(1) `Map` outside the React component. Use `useMemo` to extract redundant operations (e.g., string conversion) from inner `.filter` or `.map` loops, and process collections in a single pass rather than re-scanning them per group.
