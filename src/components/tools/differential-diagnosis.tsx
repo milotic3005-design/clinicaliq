@@ -57,6 +57,8 @@ const GROUPED_SYMPTOMS: { system: BodySystem; symptoms: Symptom[] }[] = (() => {
   }));
 })();
 
+const SYMPTOM_MAP = new Map(SYMPTOMS.map(s => [s.id, s]));
+
 // -- Component --
 
 export function DifferentialDiagnosis() {
@@ -68,7 +70,14 @@ export function DifferentialDiagnosis() {
   const ranked = useMemo(() => computeRanking(selected, DIAGNOSES), [selected]);
 
   const activeRedFlags = useMemo(() => {
-    return SYMPTOMS.filter(s => s.isRedFlag && selected.has(s.id));
+    const flags: typeof SYMPTOMS = [];
+    for (const sid of selected) {
+      const sym = SYMPTOM_MAP.get(sid);
+      if (sym && sym.isRedFlag) {
+        flags.push(sym);
+      }
+    }
+    return flags;
   }, [selected]);
 
   const toggleSymptom = (id: string) => {
@@ -94,15 +103,27 @@ export function DifferentialDiagnosis() {
     setExpandedDx(null);
   };
 
-  const filteredGroups = GROUPED_SYMPTOMS.map(g => ({
-    ...g,
-    symptoms: g.symptoms.filter(s =>
-      !searchQuery || s.name.toLowerCase().includes(searchQuery.toLowerCase())
-    ),
-  })).filter(g => g.symptoms.length > 0);
+  const filteredGroups = useMemo(() => {
+    if (!searchQuery) return GROUPED_SYMPTOMS;
+    const lowerQuery = searchQuery.toLowerCase();
+    return GROUPED_SYMPTOMS.map(g => ({
+      ...g,
+      symptoms: g.symptoms.filter(s => s.name.toLowerCase().includes(lowerQuery)),
+    })).filter(g => g.symptoms.length > 0);
+  }, [searchQuery]);
 
-  const selectedCount = (system: BodySystem) =>
-    SYMPTOMS.filter(s => s.bodySystem === system && selected.has(s.id)).length;
+  const systemCounts = useMemo(() => {
+    const counts = {} as Record<BodySystem, number>;
+    for (const sid of selected) {
+      const sym = SYMPTOM_MAP.get(sid);
+      if (sym) {
+        counts[sym.bodySystem] = (counts[sym.bodySystem] || 0) + 1;
+      }
+    }
+    return counts;
+  }, [selected]);
+
+  const selectedCount = (system: BodySystem) => systemCounts[system] || 0;
 
   return (
     <div className="space-y-4">
@@ -110,7 +131,7 @@ export function DifferentialDiagnosis() {
       {selected.size > 0 && (
         <div className="flex flex-wrap items-center gap-1.5 pb-3 border-b border-slate-100">
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1">Selected ({selected.size}):</span>
-          {SYMPTOMS.filter(s => selected.has(s.id)).map(s => (
+          {Array.from(selected).map(sid => SYMPTOM_MAP.get(sid)!).filter(Boolean).map(s => (
             <button
               key={s.id}
               onClick={() => toggleSymptom(s.id)}
@@ -310,7 +331,7 @@ export function DifferentialDiagnosis() {
                           <h5 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Matching Symptoms</h5>
                           <div className="flex flex-wrap gap-1">
                             {dx.symptoms.map(sid => {
-                              const sym = SYMPTOMS.find(s => s.id === sid);
+                              const sym = SYMPTOM_MAP.get(sid);
                               if (!sym) return null;
                               const isMatch = selected.has(sid);
                               return (
