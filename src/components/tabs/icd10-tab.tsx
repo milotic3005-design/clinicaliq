@@ -41,6 +41,7 @@ export function ICD10Tab({ data }: ICD10TabProps) {
               onClick={() => copyCode(data.exact_match!.code)}
               className="p-2 hover:bg-blue-100 rounded-lg transition-colors"
               title="Copy code"
+              aria-label="Copy code"
             >
               {copiedCode === data.exact_match.code ? (
                 <Check className="w-4 h-4 text-green-600" />
@@ -86,6 +87,7 @@ export function ICD10Tab({ data }: ICD10TabProps) {
                   onClick={() => copyCode(r.code)}
                   className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-slate-200 rounded-lg transition-all"
                   title="Copy code"
+                  aria-label="Copy code"
                 >
                   {copiedCode === r.code ? (
                     <Check className="w-3.5 h-3.5 text-green-600" />
