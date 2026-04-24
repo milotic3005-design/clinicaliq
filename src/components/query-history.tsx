@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useHistory } from '@/hooks/use-history';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Clock, X, Trash2, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
 
@@ -52,13 +51,13 @@ export function QueryHistory({ visible }: QueryHistoryProps) {
               <span className="text-muted-foreground">Clear all?</span>
               <button
                 onClick={() => { clearHistory(); setConfirmClear(false); }}
-                className="text-[#FF3B30] font-medium hover:underline"
+                className="text-[#FF3B30] font-medium hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF] focus-visible:ring-offset-1 rounded-sm"
               >
                 Yes
               </button>
               <button
                 onClick={() => setConfirmClear(false)}
-                className="text-muted-foreground hover:underline"
+                className="text-muted-foreground hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF] focus-visible:ring-offset-1 rounded-sm"
               >
                 No
               </button>
@@ -83,7 +82,7 @@ export function QueryHistory({ visible }: QueryHistoryProps) {
           <a
             key={entry.id}
             href={`/search?q=${encodeURIComponent(entry.query)}`}
-            className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50/80 transition-colors group"
+            className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50/80 focus-visible:bg-gray-50/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#007AFF] transition-colors group"
           >
             <span className="text-sm font-medium text-[#1C1C1E] truncate flex-1">
               {entry.query}
@@ -103,8 +102,8 @@ export function QueryHistory({ visible }: QueryHistoryProps) {
 
             <button
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeEntry(entry.id); }}
-              className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-gray-200 rounded transition-opacity"
-              aria-label="Remove from history"
+              className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 p-0.5 hover:bg-gray-200 focus-visible:ring-2 focus-visible:ring-[#007AFF] focus-visible:outline-none rounded transition-opacity"
+              aria-label={`Remove ${entry.query} from history`}
             >
               <X className="w-3.5 h-3.5 text-muted-foreground" />
             </button>
@@ -116,7 +115,7 @@ export function QueryHistory({ visible }: QueryHistoryProps) {
       {history.length > 10 && (
         <button
           onClick={() => setExpanded(!expanded)}
-          className="w-full flex items-center justify-center gap-1 py-2 text-xs text-[#007AFF] font-medium hover:bg-gray-50/80 transition-colors border-t border-border/20"
+          className="w-full flex items-center justify-center gap-1 py-2 text-xs text-[#007AFF] font-medium hover:bg-gray-50/80 focus-visible:outline-none focus-visible:bg-gray-50/80 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#007AFF] transition-colors border-t border-border/20"
         >
           {expanded ? (
             <>Show less <ChevronUp className="w-3.5 h-3.5" /></>
