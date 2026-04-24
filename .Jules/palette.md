@@ -1,0 +1,3 @@
+## 2025-02-23 - Focus States and Keyboard Accessibility
+**Learning:** Found several areas where UI elements lack appropriate focus states, or where lint errors point out issues in the React codebase like impure hooks and unused variables. The `<button>` items used within a mapped list were hidden to screen readers until they were hovered over (or focused on, if focus-visible is set). The focus state was also absent.
+**Action:** Always add focus-visible explicitly to `<button>` elements that only display on hover, and improve `aria-label` tags to include the context of the list item when multiple identical items exist in a list (like "Remove [query] from history").
