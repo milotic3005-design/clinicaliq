@@ -59,12 +59,22 @@ export function SearchBar({ initialQuery = '', autoFocus = false, compact = fals
   const [isLoading, setIsLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const cacheRef = useRef<Record<string, Suggestion[]>>({}); // Performance: In-memory cache for search suggestions
   const debouncedQuery = useDebounce(query, 220); // faster for perceived snappiness
 
   useEffect(() => {
     if (debouncedQuery.length < 2) {
       setSuggestions([]);
       setShowSuggestions(false);
+      setIsLoading(false);
+      return;
+    }
+
+    // Performance: Use cached suggestions if available to prevent redundant API calls
+    if (cacheRef.current[debouncedQuery]) {
+      setSuggestions(cacheRef.current[debouncedQuery]);
+      setShowSuggestions(true);
+      setSelectedIndex(-1);
       setIsLoading(false);
       return;
     }
@@ -77,7 +87,9 @@ export function SearchBar({ initialQuery = '', autoFocus = false, compact = fals
     })
       .then(res => res.json())
       .then(data => {
-        setSuggestions(data.suggestions || []);
+        const results = data.suggestions || [];
+        cacheRef.current[debouncedQuery] = results; // Store in cache
+        setSuggestions(results);
         setShowSuggestions(true);
         setSelectedIndex(-1);
         setIsLoading(false);
