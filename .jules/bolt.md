@@ -1,0 +1,3 @@
+## 2026-04-26 - Web Crypto vs Node Native Crypto Overhead
+**Learning:** The Web Crypto API (`crypto.subtle`) is standard in modern environments but carries significant overhead in Node.js compared to the native `crypto` module, primarily due to it being inherently asynchronous and returning Promises. For small, frequent operations like hashing a short cache key on the hot path, `crypto.createHash` is roughly 10x faster and eliminates event loop microtask ticks.
+**Action:** When working in a standard Node.js environment where Web Crypto is not strictly required (unlike edge runtimes), use the native synchronous `crypto` module for small hashing operations on the hot path to avoid Promise allocation overhead.
