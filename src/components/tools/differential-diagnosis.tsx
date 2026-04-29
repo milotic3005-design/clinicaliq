@@ -114,6 +114,7 @@ export function DifferentialDiagnosis() {
             <button
               key={s.id}
               onClick={() => toggleSymptom(s.id)}
+              aria-label={`Remove symptom ${s.name}`}
               className={`inline-flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded-full border transition-colors ${
                 s.isRedFlag
                   ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
