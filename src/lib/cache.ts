@@ -46,11 +46,8 @@ class MemoryCache {
 export const cache = new MemoryCache();
 export { DEFAULT_TTL_MS, SAFETY_TTL_MS };
 
-export async function hashCacheKey(query: string): Promise<string> {
-  const normalized = query.toLowerCase().trim();
-  const encoder = new TextEncoder();
-  const data = encoder.encode(normalized);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+// ⚡ Bolt: Removed unnecessary async SHA-256 hashing for cache keys.
+// Using normalized plain strings is much faster and works perfectly as a Map key.
+export function getCacheKey(query: string): string {
+  return query.toLowerCase().trim();
 }
