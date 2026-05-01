@@ -46,11 +46,8 @@ class MemoryCache {
 export const cache = new MemoryCache();
 export { DEFAULT_TTL_MS, SAFETY_TTL_MS };
 
-export async function hashCacheKey(query: string): Promise<string> {
-  const normalized = query.toLowerCase().trim();
-  const encoder = new TextEncoder();
-  const data = encoder.encode(normalized);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+// ⚡ Bolt Optimization: Replace slow async crypto hashing with fast synchronous string normalization.
+// For local in-memory Maps, cryptographic hashes provide no security/length benefit and add event loop overhead.
+export function getCacheKey(query: string): string {
+  return query.toLowerCase().trim();
 }
