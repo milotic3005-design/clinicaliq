@@ -1,0 +1,3 @@
+## 2024-05-20 - Adding ARIA labels to Icon-Only Buttons
+**Learning:** Found multiple instances where interactive, icon-only buttons (like the `X` icon used for closing modals or deleting items) lacked `aria-label`s. This compromises the accessibility of these components since screen readers cannot derive semantic meaning from the icon alone. Adding context-aware aria labels to these buttons significantly improves the UX for users using screen readers.
+**Action:** Always ensure that icon-only interactive elements contain an appropriate `aria-label` attribute (e.g. `aria-label="Remove [item name]"` or `aria-label="Close modal"`). Check dynamically rendered icon-only buttons especially.
