@@ -1,0 +1,3 @@
+## 2024-05-01 - Avoid Cryptographic Hashing for Local Map Keys
+**Learning:** Using `crypto.subtle.digest('SHA-256')` to generate keys for an in-memory `Map` cache introduces unnecessary asynchronous overhead and CPU usage. The benchmark showed that hashing took ~1.3s for 10k operations, while simple string operations took ~1.5ms. Since the keys only exist within the JS process and are not used as URLs or database keys, hashing provides no security or length benefits.
+**Action:** Use simple string normalization (e.g., `toLowerCase().trim()`) for local cache keys instead of expensive cryptographic hashes.
