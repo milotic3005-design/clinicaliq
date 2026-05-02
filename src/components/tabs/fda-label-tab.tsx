@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useId } from 'react';
 import { ChevronDown, ChevronRight, AlertTriangle, Search } from 'lucide-react';
 import type { FDALabelSummary, SourcedField } from '@/lib/types';
 import { CitationFooter } from '@/components/citation-footer';
@@ -159,6 +159,7 @@ function Section({
 }) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [showAll, setShowAll] = useState(false);
+  const contentId = useId();
 
   if (!field) return null;
 
@@ -196,6 +197,8 @@ function Section({
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`w-full flex items-center gap-2 px-4 py-3 text-left transition-colors ${headerBg}`}
+        aria-expanded={isOpen}
+        aria-controls={contentId}
       >
         {isOpen
           ? <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
@@ -210,7 +213,7 @@ function Section({
       </button>
 
       {isOpen && (
-        <div className="px-4 pb-4 pt-1">
+        <div id={contentId} className="px-4 pb-4 pt-1">
           <ul className="space-y-2">
             {visibleBullets.map((item, i) => (
               <li key={i} className="flex gap-2.5 text-sm text-slate-700 leading-relaxed">
