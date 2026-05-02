@@ -1,0 +1,3 @@
+## 2024-05-18 - Adding ARIA attributes to custom collapsible sections
+**Learning:** For custom collapsible sections (like accordion panels or toggleable lists), adding `aria-expanded={isOpen}`, `aria-controls={contentId}`, and ensuring the content block has an `id={contentId}` is critical for screen reader users to understand the component's state and boundaries. Using `React.useId()` makes it easy to generate reliable IDs.
+**Action:** When creating or modifying collapsible sections, always ensure `aria-expanded` and `aria-controls` are present on the toggle button, and that the content has the corresponding `id`.
