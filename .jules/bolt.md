@@ -1,0 +1,3 @@
+## 2024-05-04 - Avoid Cryptographic Hashing for Map Keys
+**Learning:** Using `crypto.subtle.digest` to hash cache keys for an in-memory map cache is a significant performance anti-pattern. While cryptographic hashing is useful for large datasets or distributed systems, the overhead of converting strings to buffers, computing a SHA-256 hash asynchronously, and converting back to a hex string far outweighs any lookup performance gain for simple string combinations (e.g., query + type). In benchmarks, it resulted in ~1000x slower cache key generation (1.352s vs 1.544ms for 10k iterations).
+**Action:** Use simple string operations (like `toLowerCase().trim()`) for cache keys when dealing with in-memory `Map` structures where key lengths are reasonably short and bounded.
