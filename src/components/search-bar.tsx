@@ -97,6 +97,17 @@ export function SearchBar({ initialQuery = '', autoFocus = false, compact = fals
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    function handleGlobalKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
+    }
+    document.addEventListener('keydown', handleGlobalKeyDown);
+    return () => document.removeEventListener('keydown', handleGlobalKeyDown);
+  }, []);
+
   const executeSearch = useCallback((searchQuery: string) => {
     if (searchQuery.trim().length < 2) return;
     setShowSuggestions(false);
@@ -174,10 +185,17 @@ export function SearchBar({ initialQuery = '', autoFocus = false, compact = fals
           aria-expanded={showSuggestions}
           autoComplete="off"
           spellCheck={false}
+          aria-keyshortcuts="Control+K Meta+K"
         />
-        {isLoading && (
+        {isLoading ? (
           <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground animate-spin" />
-        )}
+        ) : query.length === 0 ? (
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden sm:flex items-center pointer-events-none select-none">
+            <kbd className="inline-flex h-5 items-center gap-1 rounded border border-border bg-muted/50 px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
+              <span className="text-xs">⌘</span>K
+            </kbd>
+          </div>
+        ) : null}
       </div>
 
       {showSuggestions && suggestions.length > 0 && (
