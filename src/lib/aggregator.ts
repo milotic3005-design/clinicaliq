@@ -39,7 +39,7 @@ export async function aggregateSearch(
 ): Promise<{ brief: ClinicalBrief; cached: boolean; cache_age_ms: number | null }> {
   // Check cache
   if (!forceRefresh) {
-    const cacheKey = await hashCacheKey(`${query}:${queryType}`);
+    const cacheKey = hashCacheKey(`${query}:${queryType}`);
     const cached = cache.get<ClinicalBrief>(cacheKey);
     if (cached) {
       return {
@@ -117,7 +117,7 @@ export async function aggregateSearch(
   };
 
   // Cache the result (use shorter TTL for safety-critical data)
-  const cacheKey = await hashCacheKey(`${query}:${queryType}`);
+  const cacheKey = hashCacheKey(`${query}:${queryType}`);
   const ttl = isDrugQuery ? SAFETY_TTL_MS : DEFAULT_TTL_MS;
   cache.set(cacheKey, brief, ttl);
 
