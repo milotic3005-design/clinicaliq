@@ -46,11 +46,9 @@ class MemoryCache {
 export const cache = new MemoryCache();
 export { DEFAULT_TTL_MS, SAFETY_TTL_MS };
 
-export async function hashCacheKey(query: string): Promise<string> {
-  const normalized = query.toLowerCase().trim();
-  const encoder = new TextEncoder();
-  const data = encoder.encode(normalized);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+// Optimization: Instead of using an expensive asynchronous cryptographic hash (crypto.subtle.digest),
+// we use the normalized query string directly as the Map key. This removes async overhead
+// and CPU cost for cache operations, making cache hits nearly instantaneous.
+export function generateCacheKey(query: string): string {
+  return query.toLowerCase().trim();
 }
