@@ -7,7 +7,7 @@ import { fetchPubMed } from './sources/pubmed';
 import { fetchMedlinePlus } from './sources/medlineplus';
 import { fetchICD10 } from './sources/icd10';
 import { fetchGuidelines } from './sources/guidelines';
-import { cache, hashCacheKey, DEFAULT_TTL_MS, SAFETY_TTL_MS } from './cache';
+import { cache, getCacheKey, DEFAULT_TTL_MS, SAFETY_TTL_MS } from './cache';
 
 interface TimedResult<T> {
   result: T | null;
@@ -39,7 +39,7 @@ export async function aggregateSearch(
 ): Promise<{ brief: ClinicalBrief; cached: boolean; cache_age_ms: number | null }> {
   // Check cache
   if (!forceRefresh) {
-    const cacheKey = await hashCacheKey(`${query}:${queryType}`);
+    const cacheKey = getCacheKey(`${query}:${queryType}`);
     const cached = cache.get<ClinicalBrief>(cacheKey);
     if (cached) {
       return {
@@ -117,7 +117,7 @@ export async function aggregateSearch(
   };
 
   // Cache the result (use shorter TTL for safety-critical data)
-  const cacheKey = await hashCacheKey(`${query}:${queryType}`);
+  const cacheKey = getCacheKey(`${query}:${queryType}`);
   const ttl = isDrugQuery ? SAFETY_TTL_MS : DEFAULT_TTL_MS;
   cache.set(cacheKey, brief, ttl);
 
