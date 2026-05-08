@@ -195,6 +195,8 @@ function Section({
     <div className={`border ${borderColor} rounded-xl overflow-hidden`}>
       <button
         onClick={() => setIsOpen(!isOpen)}
+        aria-expanded={isOpen}
+        aria-label={`Toggle ${title} section`}
         className={`w-full flex items-center gap-2 px-4 py-3 text-left transition-colors ${headerBg}`}
       >
         {isOpen
