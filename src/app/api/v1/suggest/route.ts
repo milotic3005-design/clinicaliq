@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { SuggestResponse } from '@/lib/types';
 import { suggestICD10 } from '@/lib/sources/icd10';
 
+const autocompleteCache = new Map<string, { data: SuggestResponse['suggestions']; expires: number }>();
+
 const MESH_SUGGEST_URL = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi';
 const OPENFDA_SUGGEST_URL = 'https://api.fda.gov/drug/label.json';
 // RxNorm approximate-term autocomplete — purpose-built for prefix drug matching
@@ -22,6 +24,13 @@ export async function GET(request: NextRequest) {
   }
 
   const trimmed = q.trim();
+
+  const cacheKey = `suggest:${trimmed}:${limit}`;
+  const cached = autocompleteCache.get(cacheKey);
+  if (cached && cached.expires > Date.now()) {
+    return NextResponse.json({ suggestions: cached.data });
+  }
+
   const suggestions: SuggestResponse['suggestions'] = [];
 
   // Parallel fetch from all sources
@@ -49,7 +58,14 @@ export async function GET(request: NextRequest) {
     return true;
   });
 
-  return NextResponse.json({ suggestions: unique.slice(0, limit) });
+  const finalSuggestions = unique.slice(0, limit);
+
+  if (autocompleteCache.size > 500) {
+    autocompleteCache.clear();
+  }
+  autocompleteCache.set(cacheKey, { data: finalSuggestions, expires: Date.now() + 300000 }); // 5 min TTL
+
+  return NextResponse.json({ suggestions: finalSuggestions });
 }
 
 /* ── NLM Clinical Tables — RxTerms prefix autocomplete ──────────── */
