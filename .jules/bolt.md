@@ -1,0 +1,3 @@
+## 2024-05-09 - Unbounded In-Memory Caching in Node.js
+**Learning:** Using a plain `Map` for caching API responses without a size limit leads to an unbounded memory leak, especially when the cache key is based on arbitrary user input (like search queries). Entries were only removed if accessed *after* their TTL expired; untouched entries stayed in memory forever.
+**Action:** Always implement a maximum size threshold (e.g., `MAX_CACHE_SIZE`) and an eviction policy (like LRU) when building in-memory caches. You can elegantly implement LRU in JS by leveraging `Map`'s insertion-order preservation: evict via `map.keys().next().value` and update recency by deleting and re-inserting items on access.
