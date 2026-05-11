@@ -1,0 +1,3 @@
+## 2024-05-18 - Prevent OOM by Enforcing Map Limits in In-Memory Caches
+**Learning:** Using an unbounded `Map` for in-memory caching in Next.js API routes that handle arbitrary user input (like autocomplete queries) will eventually lead to Out-of-Memory (OOM) errors. Javascript's `Map` preserves insertion order, which provides an efficient way to build an LRU cache without external dependencies: use `map.keys().next().value` to identify and remove the oldest item, and delete/re-insert on `get()` to update recency.
+**Action:** When implementing or encountering a memory-backed cache with user-defined keys, always enforce a maximum size limit using the `Map` insertion order pattern to build an implicit LRU mechanism.
