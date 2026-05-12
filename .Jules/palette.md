@@ -1,0 +1,3 @@
+## 2024-05-12 - Surfacing Contextual Data Card Actions
+**Learning:** Orphaned utility components (`SaveButton`, `ExportMenu`) provide zero user value. By integrating these into the existing meta-information bar of the `ClinicalCard`, we create a consistent and intuitive contextual action area that improves UX and accessibility without altering the overall layout.
+**Action:** Always verify that utility components are actively wired to a visible UI. Ensure that contextual actions on data cards are consistently placed (e.g., opposite to meta-information) to maintain predictable navigation patterns.
