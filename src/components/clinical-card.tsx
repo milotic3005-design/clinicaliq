@@ -4,6 +4,9 @@ import { useMemo } from 'react';
 import type { ClinicalBrief } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { SaveButton } from '@/components/save-button';
+import { ExportMenu } from '@/components/export-menu';
+import { saveBrief, unsaveByBriefId, isSaved } from '@/lib/saved-briefs';
 import { FDALabelTab } from '@/components/tabs/fda-label-tab';
 import { AdverseEventsTab } from '@/components/tabs/adverse-events-tab';
 import { ClinicalTrialsTab } from '@/components/tabs/clinical-trials-tab';
@@ -24,6 +27,14 @@ interface TabDef {
 }
 
 export function ClinicalCard({ brief }: ClinicalCardProps) {
+  const handleToggleSave = () => {
+    if (isSaved(brief.id)) {
+      unsaveByBriefId(brief.id);
+    } else {
+      saveBrief(brief);
+    }
+  };
+
   const tabs = useMemo<TabDef[]>(() => {
     const t: TabDef[] = [
       {
@@ -110,22 +121,29 @@ export function ClinicalCard({ brief }: ClinicalCardProps) {
 
         <CardContent className="p-6">
           {/* Meta info bar */}
-          <div className="flex items-center gap-3 mb-4 text-xs text-muted-foreground">
-            <span>Query: <span className="font-medium text-[#1C1C1E]">{brief.query}</span></span>
-            <span>·</span>
-            <span className="capitalize">{brief.query_type.replace('_', ' ')}</span>
-            {brief.meta.cache_hit && (
-              <>
-                <span>·</span>
-                <span className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-medium">Cached</span>
-              </>
-            )}
-            {brief.meta.failed_sources.length > 0 && (
-              <>
-                <span>·</span>
-                <span className="text-amber-600">{brief.meta.failed_sources.length} source(s) unavailable</span>
-              </>
-            )}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <span>Query: <span className="font-medium text-[#1C1C1E]">{brief.query}</span></span>
+              <span>·</span>
+              <span className="capitalize">{brief.query_type.replace('_', ' ')}</span>
+              {brief.meta.cache_hit && (
+                <>
+                  <span>·</span>
+                  <span className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-medium">Cached</span>
+                </>
+              )}
+              {brief.meta.failed_sources.length > 0 && (
+                <>
+                  <span>·</span>
+                  <span className="text-amber-600">{brief.meta.failed_sources.length} source(s) unavailable</span>
+                </>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <SaveButton brief={brief} onToggle={handleToggleSave} />
+              <ExportMenu brief={brief} />
+            </div>
           </div>
 
           {availableTabs.map(tab => (
