@@ -1,0 +1,3 @@
+## 2025-01-20 - Unbounded Map Caching Memory Leaks in Next.js
+**Learning:** Using an unbounded `Map` for in-memory caching within long-lived server environments (like Next.js API routes) can easily lead to Out-of-Memory (OOM) exceptions. Since `Map` preserves insertion order, a simple LRU cache is an efficient and clean solution to bound cache size and prevent unbounded memory growth.
+**Action:** When creating in-memory caching mechanisms using `Map` in Next.js backend services, always ensure an eviction policy (like setting a `MAX_CACHE_ITEMS` limit) is implemented to enforce a maximum size constraint and prevent memory leaks.
