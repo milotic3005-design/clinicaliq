@@ -1,0 +1,3 @@
+## 2024-05-18 - Prevent Unbounded Memory Growth in Cache
+**Learning:** Next.js API routes handling user-generated input can suffer from unbounded memory growth and Out-of-Memory (OOM) leaks if caching mechanisms (like a `Map`) do not enforce a maximum size limit.
+**Action:** When implementing in-memory caching using `Map`, always enforce a maximum size limit (e.g., `if (cache.size >= MAX) cache.delete(oldestKey)`) or use an LRU pattern to prevent memory leaks. JavaScript's `Map` object preserves insertion order, allowing for easy eviction of the oldest item using `map.keys().next().value` and updating recency by deleting and re-inserting items.
