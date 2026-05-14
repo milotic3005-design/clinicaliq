@@ -13,6 +13,12 @@ class MemoryCache {
   private store = new Map<string, CacheEntry<unknown>>();
 
   set<T>(key: string, value: T, ttlMs: number = DEFAULT_TTL_MS): void {
+    if (this.store.size >= 1000 && !this.store.has(key)) {
+      const oldestKey = this.store.keys().next().value;
+      if (oldestKey !== undefined) {
+        this.store.delete(oldestKey);
+      }
+    }
     this.store.set(key, {
       value,
       created_at: Date.now(),
@@ -29,6 +35,10 @@ class MemoryCache {
       this.store.delete(key);
       return null;
     }
+
+    // Refresh recency for LRU
+    this.store.delete(key);
+    this.store.set(key, entry);
 
     return { value: entry.value as T, age_ms: age };
   }
