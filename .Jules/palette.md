@@ -1,0 +1,3 @@
+## 2025-02-28 - Focus Management and Accessibility for Clear Buttons
+**Learning:** When implementing a clear button for an input field (like a search bar), removing the input's text often removes the button itself from the DOM or at least shifts the user's interactive state. This can cause screen readers and keyboard navigators to lose context. An icon-only button must have an `aria-label` to be perceivable, and `focus-visible` styles to be trackable by keyboard users.
+**Action:** Always include focus restoration logic (`inputRef.current?.focus()`) when an action clears user input, and ensure icon-only buttons have descriptive `aria-label` attributes and explicit focus indicators (e.g., `focus-visible:ring-2`).
