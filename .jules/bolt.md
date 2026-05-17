@@ -1,0 +1,3 @@
+## 2024-05-17 - Bounded Caching to Prevent OOM Leaks
+**Learning:** Using an unbounded `Map` for in-memory caching in Next.js API routes that handle diverse user inputs (like autocomplete queries) will eventually lead to Out-of-Memory (OOM) errors and application crashes, as the cache grows continuously without limit.
+**Action:** When implementing an in-memory cache, always use a Least Recently Used (LRU) pattern and enforce a maximum size limit (`maxSize`). For JavaScript's `Map`, this is easily implemented since it preserves insertion order, allowing eviction of the oldest item using `map.keys().next().value`.
