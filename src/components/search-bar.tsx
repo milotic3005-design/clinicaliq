@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDebounce } from '@/hooks/use-debounce';
 import { Input } from '@/components/ui/input';
-import { Search, Loader2, Pill, Activity, Hash } from 'lucide-react';
+import { Search, Loader2, Pill, Activity, Hash, X } from 'lucide-react';
 
 interface Suggestion {
   label: string;
@@ -175,9 +175,26 @@ export function SearchBar({ initialQuery = '', autoFocus = false, compact = fals
           autoComplete="off"
           spellCheck={false}
         />
-        {isLoading && (
-          <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground animate-spin" />
-        )}
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+          {isLoading && (
+            <Loader2 className="h-4 w-4 text-muted-foreground animate-spin" />
+          )}
+          {query.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                setQuery('');
+                setSuggestions([]);
+                setShowSuggestions(false);
+                inputRef.current?.focus();
+              }}
+              aria-label="Clear search"
+              className="p-1 rounded-full text-muted-foreground hover:bg-gray-100 hover:text-[#1C1C1E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF] transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       {showSuggestions && suggestions.length > 0 && (
