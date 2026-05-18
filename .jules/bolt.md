@@ -1,0 +1,3 @@
+## 2026-05-18 - [In-Memory Cache LRU Limit]
+**Learning:** When implementing in-memory caching (e.g., using a `Map`) within Next.js API routes that handle user-generated input (like search aggregation), not enforcing a maximum size limit causes unbounded memory growth, which could result in Out-of-Memory (OOM) errors in production. JavaScript's `Map` preserves insertion order, which can be leveraged to create an LRU (Least Recently Used) cache by evicting the oldest item via `map.keys().next().value`.
+**Action:** Always enforce a maximum size limit (`if (cache.size >= MAX) cache.delete(cache.keys().next().value)`) or use an explicit LRU pattern for in-memory caches to prevent unbounded memory leaks.
