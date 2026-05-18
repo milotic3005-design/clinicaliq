@@ -1,0 +1,3 @@
+## 2024-05-18 - Search Input Clear Buttons and Focus Restoration
+**Learning:** When implementing a clear button for an input field (like a search bar), users expect the focus to immediately return to the input after clicking the clear button, especially for keyboard-heavy workflows. Without focus restoration, the keyboard context is lost.
+**Action:** When implementing elements that clear or remove user input, always include focus restoration logic (e.g., `inputRef.current?.focus()`) to prevent users from losing keyboard context, and ensure icon-only buttons have descriptive `aria-label` attributes and `focus-visible` styles.
