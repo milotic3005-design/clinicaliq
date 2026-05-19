@@ -1,0 +1,3 @@
+## 2024-05-14 - Search Bar Input Clearing Accessibility
+**Learning:** When implementing elements that clear user input (like a clear button in a search bar), simply clearing the React state is insufficient for good UX. Users expect to immediately begin typing a new query after clicking clear.
+**Action:** Always include focus restoration logic (`inputRef.current?.focus()`) when clearing input fields to prevent users from losing their keyboard context. Ensure the clear button itself is accessible (e.g., `aria-label="Clear search"`) and styled for keyboard navigation (e.g., `focus-visible` styles).
