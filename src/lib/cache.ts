@@ -11,8 +11,23 @@ const SAFETY_TTL_MS = 6 * 60 * 60 * 1000;   // 6 hours for FAERS/enforcement
 
 class MemoryCache {
   private store = new Map<string, CacheEntry<unknown>>();
+  private readonly maxSize: number;
+
+  constructor(maxSize: number = 500) {
+    this.maxSize = maxSize;
+  }
 
   set<T>(key: string, value: T, ttlMs: number = DEFAULT_TTL_MS): void {
+    if (this.store.size >= this.maxSize && !this.store.has(key)) {
+      // Evict the oldest entry (Map preserves insertion order)
+      const oldestKey = this.store.keys().next().value;
+      if (oldestKey !== undefined) {
+        this.store.delete(oldestKey);
+      }
+    }
+
+    // Deleting before setting ensures the key is moved to the end (most recently used)
+    this.store.delete(key);
     this.store.set(key, {
       value,
       created_at: Date.now(),
@@ -29,6 +44,10 @@ class MemoryCache {
       this.store.delete(key);
       return null;
     }
+
+    // Update recency for LRU by re-inserting
+    this.store.delete(key);
+    this.store.set(key, entry);
 
     return { value: entry.value as T, age_ms: age };
   }
