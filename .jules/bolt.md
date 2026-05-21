@@ -1,0 +1,3 @@
+## 2023-10-27 - LRU Cache with JavaScript Map
+**Learning:** JavaScript's `Map` object preserves insertion order. This means we can implement a simple and efficient Least Recently Used (LRU) cache without additional data structures. The oldest item is always accessible via `map.keys().next().value`. We update an item's recency simply by deleting it and re-inserting it. This prevents unbounded memory growth in custom in-memory caches.
+**Action:** When implementing custom caches in Node.js/Next.js, always enforce a maximum size limit using `Map`'s insertion order logic to prevent memory leaks and out-of-memory (OOM) errors, especially when dealing with user-generated input like search autocomplete queries.
