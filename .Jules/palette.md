@@ -1,0 +1,3 @@
+## 2024-05-18 - Search Clear Button State Management
+**Learning:** When adding elements that interrupt or alter complex input states (like an auto-suggesting search bar), simply clearing the input value is insufficient. It is crucial to manually reset all connected side-effects (e.g., closing suggestion dropdowns, clearing suggestion arrays, disabling loading spinners) and explicitly restore keyboard focus back to the input to prevent stale UI states and maintain a fluid, accessible interaction loop.
+**Action:** Always map out and reset all dependent states (suggestions, loading, index) when building `clear` actions for complex inputs, and mandate focus restoration (`inputRef.current?.focus()`) as part of the clear handler.
