@@ -1,0 +1,3 @@
+## 2024-05-24 - Unbounded Memory Growth in Next.js Custom Cache
+**Learning:** In long-running processes like Next.js backend routes, simple in-memory cache implementations using `Map` can lead to unbounded memory growth and OOM errors if a `maxSize` or LRU eviction strategy isn't enforced. Furthermore, when implementing an LRU cache with a standard JS `Map` object, `Map.prototype.set` does *not* update insertion order for pre-existing keys.
+**Action:** When implementing an LRU cache using `Map`, always enforce a maximum size limit (e.g., `if (cache.size >= MAX) evict oldest`). To refresh an item's recency during a `set` or `get`, explicitly `delete` the key first before re-inserting it.
