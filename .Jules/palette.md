@@ -1,0 +1,3 @@
+## 2026-05-23 - Clear Input Button UX
+**Learning:** When implementing elements that clear or remove user input (like a search clear button), it is critical to not only clear the text state but also explicitly clear any associated state (e.g., autocomplete/suggestion lists) to prevent stale UI. Furthermore, adding an `aria-label` is required for icon-only buttons, and restoring focus back to the input element (`inputRef.current?.focus()`) significantly improves the keyboard and screen reader user experience.
+**Action:** When creating any button or action that clears an input, always include focus restoration logic, explicitly clear dependent states, and ensure icon-only buttons have descriptive `aria-label` attributes and `focus-visible` styles.
