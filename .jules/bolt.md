@@ -1,0 +1,3 @@
+## 2024-05-24 - [Unbounded Memory Leak in Map-based Caches]
+**Learning:** In-memory caches built on standard `Map` structures without size limits are prone to unbounded memory growth, potentially causing Out-of-Memory (OOM) errors in production if user input dynamically seeds cache keys. JavaScript's `Map` inherently preserves insertion order, which can be leveraged to create an O(1) LRU eviction policy without additional arrays or linked lists.
+**Action:** Always cap in-memory maps or caches explicitly (e.g. `if (this.store.size >= this.maxSize)`). For LRU cache using `Map`, remember to evict the oldest using `this.store.keys().next().value`, and critically, explicitly `delete` and `set` the key upon read/write to update its recency.
