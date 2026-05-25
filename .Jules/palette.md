@@ -1,0 +1,3 @@
+## 2024-05-25 - Search Clear Button Focus Restoration
+**Learning:** When implementing a clear button for search inputs, simply emptying the value is insufficient for good UX and accessibility. Removing the query must also explicitly re-focus the input (`inputRef.current?.focus()`) so users can immediately begin typing a new query without needing to use a mouse or navigate back to the input. Additionally, autocomplete/suggestion states must be explicitly cleared to prevent stale UI.
+**Action:** When adding elements that clear or remove user input, always include focus restoration logic and clear any associated popup states. Ensure icon-only buttons like clear buttons have descriptive `aria-label` attributes and `focus-visible` styling to maintain keyboard accessibility.
