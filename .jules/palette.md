@@ -1,0 +1,3 @@
+## 2024-05-28 - Explicit State Clearing and Focus Restoration for Clear Actions
+**Learning:** When adding a clear button to a search input that has associated states (like an autocomplete suggestion list), merely clearing the input value is insufficient. Failing to hide or reset the autocomplete states can result in a stale UI where suggestions remain visible over an empty input. Furthermore, clear actions disrupt the user's focus on the input.
+**Action:** When implementing elements that clear or remove user input, always include focus restoration logic (`inputRef.current?.focus()`), explicitly clear any associated state to prevent stale UI, and ensure icon-only buttons have descriptive `aria-label` attributes and `focus-visible` styles.
