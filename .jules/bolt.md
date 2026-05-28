@@ -1,0 +1,3 @@
+## 2024-05-28 - Implemented LRU Cache for Search Suggestions
+**Learning:** When implementing in-memory caching (e.g., using a `Map`) within Next.js API routes that handle user-generated input (like autocomplete queries), an unbounded cache can quickly cause an Out-of-Memory (OOM) leak. JavaScript's `Map` object preserves insertion order, which can be leveraged for a lightweight LRU policy, but `Map.prototype.set` does not update the insertion order of an already-existing key.
+**Action:** Always enforce a maximum size limit (`if (cache.size > maxSize) cache.delete(cache.keys().next().value)`) and explicitly `delete` an existing key first before re-inserting it during `get` or `set` operations to properly refresh its recency for the LRU eviction policy.
