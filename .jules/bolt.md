@@ -1,0 +1,3 @@
+## 2026-05-29 - Preventing Memory Leaks in Autocomplete API Routes
+**Learning:** When adding caching to an autocomplete API endpoint (like `/api/v1/suggest`), unbounded Map instances will cause memory leaks because the key space is effectively infinite (user input prefixes). Furthermore, inserting existing keys into a standard JavaScript Map does not update their insertion order, which breaks LRU logic unless explicitly deleted first.
+**Action:** Always implement a `maxSize` cap with LRU eviction logic (deleting `map.keys().next().value`) for memory caches. Ensure that `get` and `set` operations delete the key before insertion to correctly refresh the item's position as the most recently used.
