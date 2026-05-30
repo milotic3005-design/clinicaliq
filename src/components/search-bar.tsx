@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDebounce } from '@/hooks/use-debounce';
 import { Input } from '@/components/ui/input';
-import { Search, Loader2, Pill, Activity, Hash } from 'lucide-react';
+import { Search, Loader2, Pill, Activity, Hash, X } from 'lucide-react';
 
 interface Suggestion {
   label: string;
@@ -104,6 +104,13 @@ export function SearchBar({ initialQuery = '', autoFocus = false, compact = fals
     router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
   }, [router]);
 
+  const handleClear = useCallback(() => {
+    setQuery('');
+    setSuggestions([]);
+    setShowSuggestions(false);
+    inputRef.current?.focus();
+  }, []);
+
   function handleKeyDown(e: React.KeyboardEvent) {
     if (!showSuggestions || suggestions.length === 0) {
       if (e.key === 'Enter') {
@@ -175,9 +182,18 @@ export function SearchBar({ initialQuery = '', autoFocus = false, compact = fals
           autoComplete="off"
           spellCheck={false}
         />
-        {isLoading && (
+        {isLoading ? (
           <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground animate-spin" />
-        )}
+        ) : query ? (
+          <button
+            type="button"
+            onClick={handleClear}
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF] transition-colors"
+            aria-label="Clear search"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        ) : null}
       </div>
 
       {showSuggestions && suggestions.length > 0 && (
