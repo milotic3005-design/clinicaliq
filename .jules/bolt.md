@@ -1,0 +1,3 @@
+## 2024-05-18 - Unbounded Cache OOM and Map LRU Trick
+**Learning:** In Next.js long-running instances, using an unbounded in-memory cache for user-generated inputs (like autocomplete queries) will cause an Out-Of-Memory (OOM) leak due to the practically infinite permutations of user queries. Additionally, when using a JavaScript `Map` to implement an LRU cache based on insertion order, `Map.prototype.set()` does not update the recency of an existing key.
+**Action:** Always enforce a `maxSize` (or equivalent bound) on in-memory caches. When refreshing recency on a cache `get` or updating on a `set` for an LRU implemented via `Map`, explicitly `delete(key)` before `set(key, value)` to push the item to the end of the insertion order.
