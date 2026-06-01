@@ -1,0 +1,3 @@
+## 2024-05-18 - Unbounded Memory Caches in Next.js APIs
+**Learning:** When using `Map` for in-memory caching in high-frequency Next.js API routes (like `/api/v1/suggest`), the cache can grow unboundedly leading to OOM (Out-of-Memory) errors if there is no eviction policy. Additionally, `Map.prototype.set` does not update the insertion order (recency) if the key already exists.
+**Action:** Always implement a `maxSize` limit with an LRU eviction strategy (`map.keys().next().value`) for in-memory caches. Crucially, explicitly `delete` an existing key before re-inserting it in `set` or `get` methods to properly update its recency and ensure the oldest items are evicted first.
