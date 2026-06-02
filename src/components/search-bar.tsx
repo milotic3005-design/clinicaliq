@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDebounce } from '@/hooks/use-debounce';
 import { Input } from '@/components/ui/input';
-import { Search, Loader2, Pill, Activity, Hash } from 'lucide-react';
+import { Search, Loader2, Pill, Activity, Hash, X } from 'lucide-react';
 
 interface Suggestion {
   label: string;
@@ -177,6 +177,23 @@ export function SearchBar({ initialQuery = '', autoFocus = false, compact = fals
         />
         {isLoading && (
           <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground animate-spin" />
+        )}
+        {!isLoading && query.length > 0 && (
+          <button
+            type="button"
+            aria-label="Clear search"
+            onClick={() => {
+              setQuery('');
+              setSuggestions([]);
+              setShowSuggestions(false);
+              setSelectedIndex(-1);
+              setIsLoading(false);
+              inputRef.current?.focus();
+            }}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-[#1C1C1E] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#007AFF] rounded-full p-0.5 transition-colors"
+          >
+            <X className="h-4 w-4" />
+          </button>
         )}
       </div>
 
