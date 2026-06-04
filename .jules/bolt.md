@@ -1,0 +1,3 @@
+## 2026-06-04 - LRU Cache Memory Bounding for Next.js API Routes
+**Learning:** JavaScript `Map` preserves insertion order, which is ideal for an LRU cache. However, `Map.prototype.set` does not update the insertion order of an already-existing key. Additionally, in-memory caching in long-running Next.js API routes must have an explicit size bound to prevent unbound memory growth and Out-of-Memory (OOM) errors during high-frequency requests (like autocomplete).
+**Action:** When implementing an LRU cache using `Map`, always `delete` the key before re-inserting it during both `set` and `get` operations to refresh its recency. Always implement a `maxSize` eviction limit to cap memory usage.
