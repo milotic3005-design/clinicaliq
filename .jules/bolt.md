@@ -1,0 +1,3 @@
+## 2024-06-25 - Prevent Unbounded Memory Growth in In-Memory Caches
+**Learning:** When implementing an in-memory cache (like `Map`) for user-generated input, such as autocomplete queries handled by API routes, unbounded memory growth can lead to Out-of-Memory (OOM) leaks. An LRU cache mechanism that explicitly deletes the oldest entry upon reaching a size limit is necessary. Additionally, to maintain correct insertion order in a JavaScript `Map` for an LRU pattern, it's required to explicitly `delete` a key before re-inserting it.
+**Action:** Always enforce a max size limit (`maxSize`) or use an LRU eviction policy when caching high-frequency or user-generated data. Remember to delete existing keys before re-setting them in a Map to refresh their recency.
