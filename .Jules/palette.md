@@ -1,0 +1,3 @@
+## 2026-06-11 - Add search clear button
+**Learning:** Implementing custom interactive clear elements (like an 'X' button inside a text input) requires explicit focus restoration (e.g., `inputRef.current?.focus()`). Otherwise, keyboard users will lose their current position in the DOM after the interaction, preventing them from seamlessly re-entering a search query.
+**Action:** When implementing elements that clear or remove user input, always explicitly clear associated states (like autocomplete suggestions) and verify that focus is restored to the primary input element. Ensure icon-only buttons have descriptive `aria-label` attributes.
