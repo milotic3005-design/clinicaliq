@@ -1,0 +1,3 @@
+## 2024-06-12 - Prevent Out-of-Memory Leaks in Next.js In-Memory Cache
+**Learning:** Using an unbounded `Map` for in-memory caching in high-frequency Next.js API routes (like autocomplete) is an anti-pattern that leads to unbounded memory growth and OOM errors. Additionally, `Map.prototype.set` does not update insertion order for existing keys, requiring a `delete` and `set` to properly maintain LRU recency.
+**Action:** Always implement an LRU eviction policy with a `maxSize` limit when building custom in-memory caches, and explicitly delete/re-insert keys on access to preserve correct recency order.
