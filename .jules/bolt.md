@@ -1,0 +1,3 @@
+## 2026-06-13 - LRU Cache using Map Insertion Order
+**Learning:** In-memory caching mechanisms using `Map` can leverage insertion order preservation for an effective and performant Least Recently Used (LRU) eviction strategy without needing an array-backed queue. To refresh recency on a cache hit, the key must be explicitly `delete()`-ed and re-inserted.
+**Action:** When implementing in-memory caches, especially those vulnerable to Out-Of-Memory leaks due to unpredictable API payload sizes in Node.js runtime, always apply a `maxSize` bounds check with eviction strategies leveraging `map.keys().next().value` to clear the oldest entry safely.
