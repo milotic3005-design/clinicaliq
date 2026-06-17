@@ -1,0 +1,3 @@
+## 2026-06-17 - LRU Cache Max Size & Insertion Order
+**Learning:** Implementing an LRU (Least Recently Used) cache in JavaScript using a `Map` takes advantage of its insertion order preservation. However, it requires a max size to prevent unbounded memory growth, especially on high-frequency routes like autocomplete. Updating a `Map` value with `set` does not refresh its insertion order if the key already exists.
+**Action:** When creating in-memory caches or updating existing entries in an LRU `Map`, always enforce a maximum size limit and explicitly `delete` and re-insert the key during `set` and `get` operations to maintain recency.
