@@ -1,0 +1,3 @@
+## 2026-06-21 - Prevent OOM via LRU Caching in High-Frequency API
+**Learning:** The in-memory cache used by the `/api/v1/suggest` autocomplete route lacked an eviction policy. Because this route receives rapid inputs (e.g., keystroke by keystroke) and caches results for up to 24 hours without limits, it could eventually lead to unbounded memory growth and Out-of-Memory (OOM) leaks.
+**Action:** When implementing in-memory caching for user-input-driven endpoints, always enforce a maximum size limit (e.g., using an LRU eviction policy with `Map`) to prevent unbounded memory usage, and remember that `Map.prototype.set` does not update insertion order if the key already exists.
