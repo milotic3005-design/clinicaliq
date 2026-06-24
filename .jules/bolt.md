@@ -1,0 +1,3 @@
+## 2024-06-24 - LRU Eviction to Prevent OOM in Backend Cache
+**Learning:** The `MemoryCache` in the backend API was using a basic `Map` to cache autocomplete suggestions and searches. Since Javascript `Map` has no bounds, heavy usage with varying queries could cause unbounded memory growth and result in Out-of-Memory (OOM) leaks for the Next.js process.
+**Action:** Re-implemented the `MemoryCache` to act as an LRU (Least Recently Used) Cache by adding a `maxSize` (default 500) limit. Leveraging the native insertion-order property of Javascript `Map`, the oldest entries can be evicted using `map.keys().next().value` and recent entries refreshed by `delete()` and re-`set()`.
