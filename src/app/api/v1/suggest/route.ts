@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { SuggestResponse } from '@/lib/types';
 import { suggestICD10 } from '@/lib/sources/icd10';
+import { cache, hashCacheKey } from '@/lib/cache';
 
 const MESH_SUGGEST_URL = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi';
 const OPENFDA_SUGGEST_URL = 'https://api.fda.gov/drug/label.json';
@@ -23,6 +24,12 @@ export async function GET(request: NextRequest) {
 
   const trimmed = q.trim();
   const suggestions: SuggestResponse['suggestions'] = [];
+
+  const cacheKey = await hashCacheKey(`suggest:${trimmed}:${limit}`);
+  const cached = cache.get<SuggestResponse['suggestions']>(cacheKey);
+  if (cached) {
+    return NextResponse.json({ suggestions: cached.value });
+  }
 
   // Parallel fetch from all sources
   const [nlmRxResults, rxnormResults, openfdaResults, meshResults, icd10Results] = await Promise.allSettled([
@@ -49,7 +56,11 @@ export async function GET(request: NextRequest) {
     return true;
   });
 
-  return NextResponse.json({ suggestions: unique.slice(0, limit) });
+  const finalSuggestions = unique.slice(0, limit);
+  // Cache for 6 hours
+  cache.set(cacheKey, finalSuggestions, 6 * 60 * 60 * 1000);
+
+  return NextResponse.json({ suggestions: finalSuggestions });
 }
 
 /* ── NLM Clinical Tables — RxTerms prefix autocomplete ──────────── */
