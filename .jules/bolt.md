@@ -1,0 +1,3 @@
+## 2026-06-28 - LRU Cache Eviction & API Caching
+**Learning:** When implementing an LRU cache using a Map object in Javascript, insertion order is preserved. However, setting an already existing key does not update its insertion order. You must explicitly delete the key first before re-inserting it. Also, high-frequency autocomplete endpoints fetch the same queries repeatedly, requiring a bounded in-memory cache to prevent redundant external API calls and unbounded memory growth.
+**Action:** Always enforce a maximum size limit and an eviction strategy like LRU for in-memory caches. Always delete an existing Map key before re-setting it if refreshing insertion order is required for the eviction strategy.
