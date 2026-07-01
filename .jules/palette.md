@@ -1,0 +1,3 @@
+## 2024-05-24 - Clear Search Autocomplete State Handling
+**Learning:** When implementing elements that clear or remove user input (like a search clear button), it's crucial to explicitly clear any associated autocomplete/suggestion states (like `suggestions` array and visibility flags) to prevent stale UI, and always restore focus to the input element (`inputRef.current?.focus()`) for keyboard navigation continuity.
+**Action:** When adding clear buttons, I will check for and reset associated autocomplete states and add focus restoration logic, along with descriptive `aria-label` attributes and `focus-visible` styles.
