@@ -1,0 +1,3 @@
+## 2024-05-14 - Focus Restoration on Clear Buttons
+**Learning:** When implementing elements that clear or remove user input (like a search clear button), simply clearing the input is insufficient for good UX and accessibility. The focus must be explicitly restored to the input element so the user can immediately begin typing again without needing to click or tab back to it.
+**Action:** Always include focus restoration logic (e.g., `inputRef.current?.focus()`), explicitly clear any associated autocomplete/suggestion states to prevent stale UI, and ensure icon-only buttons have descriptive `aria-label` attributes and `focus-visible` styles.
