@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { SuggestResponse } from '@/lib/types';
 import { suggestICD10 } from '@/lib/sources/icd10';
+import { cache } from '@/lib/cache';
 
 const MESH_SUGGEST_URL = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi';
 const OPENFDA_SUGGEST_URL = 'https://api.fda.gov/drug/label.json';
@@ -22,6 +23,14 @@ export async function GET(request: NextRequest) {
   }
 
   const trimmed = q.trim();
+
+  // Check cache first
+  const cacheKey = `suggest:${trimmed}:${limit}`;
+  const cached = cache.get<{suggestions: SuggestResponse['suggestions']}>(cacheKey);
+  if (cached) {
+    return NextResponse.json(cached.value);
+  }
+
   const suggestions: SuggestResponse['suggestions'] = [];
 
   // Parallel fetch from all sources
@@ -49,7 +58,10 @@ export async function GET(request: NextRequest) {
     return true;
   });
 
-  return NextResponse.json({ suggestions: unique.slice(0, limit) });
+  const finalResult = { suggestions: unique.slice(0, limit) };
+  cache.set(cacheKey, finalResult, 60 * 60 * 1000); // Cache for 1 hour
+
+  return NextResponse.json(finalResult);
 }
 
 /* ── NLM Clinical Tables — RxTerms prefix autocomplete ──────────── */
