@@ -1,0 +1,3 @@
+## 2024-07-04 - Search Bar Clear Button Accessibility and Focus Restoration
+**Learning:** When adding micro-UX elements like clear buttons to search inputs, it's critical to not only clear the input value but also explicitly reset any associated complex UI states (like autocomplete suggestions and focused index) and restore focus back to the input element (`inputRef.current?.focus()`) so keyboard users don't lose their place.
+**Action:** Next time I add a clear/reset button, ensure all related component states are reset simultaneously and verify keyboard focus restoration in Playwright tests using `document.activeElement === node`.
